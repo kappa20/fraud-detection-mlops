@@ -2,6 +2,8 @@
 data/raw/creditcard.csv
 data/raw/*.csv
 !data/raw/.gitkeep
+data/*.zip
+data/raw/*.zip
 
 # DuckDB
 *.duckdb

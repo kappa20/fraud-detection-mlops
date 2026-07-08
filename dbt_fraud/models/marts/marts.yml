@@ -1,0 +1,50 @@
+version: 2
+
+models:
+  - name: fct_transactions_clean
+    description: Transactions nettoyées (montants négatifs exclus), base commune des marts.
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+      - name: amount
+        tests:
+          - not_null
+      - name: is_fraud
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
+
+  - name: fct_transactions_features
+    description: >
+      Table de features pour l'entraînement du modèle (Livrable 5) : ajoute
+      hour_of_day, log_amount et amount_bucket, dérivés des seules colonnes
+      interprétables du dataset.
+    columns:
+      - name: transaction_id
+        tests:
+          - unique
+          - not_null
+      - name: hour_of_day
+        tests:
+          - not_null
+      - name: amount_bucket
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: ['zero', 'low', 'medium', 'high', 'very_high']
+
+  - name: agg_fraud_hourly_summary
+    description: Agrégat horaire du taux de fraude — produit analytique consommable en l'état.
+    columns:
+      - name: hour_of_day
+        tests:
+          - unique
+          - not_null
+      - name: fraud_rate
+        tests:
+          - not_null

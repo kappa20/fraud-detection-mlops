@@ -1,0 +1,7 @@
+dbt_fraud:
+  target: dev
+  outputs:
+    dev:
+      type: duckdb
+      path: ../fraud_detection.duckdb
+      threads: 1

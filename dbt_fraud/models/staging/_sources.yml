@@ -1,0 +1,11 @@
+version: 2
+
+sources:
+  - name: raw
+    schema: raw
+    description: >
+      Schéma alimenté par le pipeline dlt (ingestion_dlt/run_pipeline.py) à
+      partir du dataset Kaggle "Credit Card Fraud Detection" (ULB).
+    tables:
+      - name: transactions_raw
+        description: Table brute, une ligne par transaction, non transformée.
