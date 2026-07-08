@@ -1,0 +1,29 @@
+version: 2
+
+models:
+  - name: stg_transactions
+    description: >
+      Transactions typées et renommées, une ligne par transaction ingérée.
+      Voir le Data Contract (docs/data/data_contract.yaml) pour le détail
+      des règles de qualité appliquées.
+    columns:
+      - name: transaction_id
+        description: Identifiant unique de la transaction (dlt _dlt_id).
+        tests:
+          - unique
+          - not_null
+      - name: time_seconds
+        description: Secondes écoulées depuis la première transaction du jeu de données.
+        tests:
+          - not_null
+      - name: amount
+        description: Montant de la transaction.
+        tests:
+          - not_null
+      - name: is_fraud
+        description: "0 = transaction légitime, 1 = transaction frauduleuse."
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+                values: [0, 1]
