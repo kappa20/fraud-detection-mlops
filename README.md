@@ -56,11 +56,28 @@ Le pipeline s'appuie sur le dataset public **"Credit Card Fraud Detection" (ULB)
 
 ## Installation
 
-🚧 Sera détaillé dans [`docs/03_installation.md`](docs/03_installation.md) une fois le pipeline implémenté (Phase B). En résumé :
+Détaillé dans [`docs/03_installation.md`](docs/03_installation.md) 🚧 (Phase F). En résumé, environnement conda (recommandé, testé) :
 ```bash
-python -m venv .venv && source .venv/bin/activate
+conda create -n mlops_fraud python=3.11
+conda activate mlops_fraud
 pip install -r requirements.txt
 ```
+Alternative avec `venv` :
+```bash
+python3.11 -m venv .venv && source .venv/bin/activate
+pip install -r requirements.txt
+```
+
+## Exécuter le pipeline DataOps (Phase B)
+
+```bash
+# 1. Placer data/raw/creditcard.csv (voir data/README.md)
+# 2. Lancer le pipeline complet via Dagster :
+dagster job execute -f orchestration_dagster/fraud_dagster/job.py -a fraud_pipeline_job
+# ou avec l'UI web :
+dagster dev -f orchestration_dagster/fraud_dagster/job.py
+```
+Étapes exécutées : ingestion `dlt` (CSV → DuckDB) → validation shift-left → `dbt run` (staging + marts) → `dbt test` (20 tests qualité).
 
 ## Équipe et rôles Agile
 
