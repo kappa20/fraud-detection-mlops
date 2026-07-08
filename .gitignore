@@ -1,0 +1,47 @@
+# Données réelles (non redistribuables — licence Kaggle)
+data/raw/creditcard.csv
+data/raw/*.csv
+!data/raw/.gitkeep
+
+# DuckDB
+*.duckdb
+*.duckdb.wal
+
+# dbt
+dbt_fraud/target/
+dbt_fraud/logs/
+dbt_fraud/dbt_packages/
+dbt_fraud/.user.yml
+
+# MLflow
+mlruns/
+mlflow.db
+ml/artifacts/*.pkl
+ml/artifacts/*.joblib
+!ml/artifacts/.gitkeep
+
+# Dagster
+orchestration_dagster/**/storage/
+orchestration_dagster/**/history/
+orchestration_dagster/**/.dagster_home/
+
+# Monitoring runtime output
+monitoring/predictions_log.jsonl
+monitoring/*.html
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+.ruff_cache/
+
+# Secrets / env
+.env
+
+# OS / editors
+.DS_Store
+.vscode/
+.idea/
