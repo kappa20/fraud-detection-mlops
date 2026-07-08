@@ -25,8 +25,9 @@ Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architec
 |---|---|---|
 | [`docs/01_vision.md`](docs/01_vision.md) | Problématique, objectifs, utilisateurs cibles, valeur métier, Data Strategy | 1 |
 | [`docs/agile/`](docs/agile/) | Product Backlog, User Stories, Sprint Planning/Review/Retrospective | 2 |
-| [`docs/data/data_contract.yaml`](docs/data/data_contract.yaml) 🚧 | Contrat de données (schéma, règles de qualité, consommateurs) | 4 |
-| [`docs/data/data_lineage.md`](docs/data/data_lineage.md) 🚧 | Lignage des données, de la source au service exposé | 4 |
+| [`docs/data/data_contract.yaml`](docs/data/data_contract.yaml) | Contrat de données (schéma, règles de qualité, consommateurs) | 4 |
+| [`docs/data/data_lineage.md`](docs/data/data_lineage.md) | Lignage des données, de la source au service exposé | 4 |
+| [`docs/data/data_quality_report.md`](docs/data/data_quality_report.md) | Rapport de qualité (11 dimensions du cours) sur le dataset réel | 4 |
 | [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md) 🚧 | Synthèse des expériences MLflow | 6 |
 | [`docs/03_installation.md`](docs/03_installation.md) 🚧 | Guide d'installation | 10 |
 | [`docs/04_guide_utilisation.md`](docs/04_guide_utilisation.md) 🚧 | Guide d'utilisation | 10 |
@@ -37,10 +38,10 @@ Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architec
 projet/
 ├── docs/                    # Vision, Agile, Qualité des données, ML, documentation
 ├── data/raw/                # Dataset source (non versionné, voir data/README.md)
-├── ingestion_dlt/           # 🚧 Pipeline d'ingestion dlt → DuckDB
-├── dbt_fraud/               # 🚧 Projet dbt (staging + marts + tests)
-├── quality/                 # 🚧 Validation shift-left du schéma
-├── orchestration_dagster/   # 🚧 Orchestration Dagster du pipeline
+├── ingestion_dlt/           # Pipeline d'ingestion dlt → DuckDB
+├── dbt_fraud/                # Projet dbt (staging + marts + tests + macros)
+├── quality/                  # Validation shift-left du schéma
+├── orchestration_dagster/    # Orchestration Dagster du pipeline
 ├── ml/                      # 🚧 Préparation des données, entraînement, évaluation, MLflow
 ├── api/                     # 🚧 Service FastAPI (/predict, /health, /metrics)
 ├── monitoring/              # 🚧 Surveillance et détection de dérive

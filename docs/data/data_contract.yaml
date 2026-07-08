@@ -1,0 +1,126 @@
+# Data Contract — fct_transactions_clean / fct_transactions_features
+#
+# Le Chapitre 3 du cours (Qualité & Tests de données) ne fournit pas de
+# gabarit de Data Contract : ce document est construit par l'équipe, en
+# combinant le contrôle de schéma, les métadonnées en 3 couches (Atwal,
+# 2019 — descriptives / structurelles / administratives) et les 11
+# dimensions de qualité présentées en cours. Voir docs/data/data_quality_report.md
+# pour le détail de chaque dimension appliquée à ce dataset.
+
+dataset: fraud_transactions
+version: "1.0.0"
+owner: data-engineering-team
+status: active
+
+description: >
+  Transactions par carte bancaire (dataset Kaggle "Credit Card Fraud
+  Detection", ULB). Les colonnes v1 à v28 sont issues d'une transformation
+  PCA appliquée par les auteurs du dataset pour anonymiser les données :
+  elles n'ont pas de signification métier directement interprétable. Seules
+  time_seconds, amount et is_fraud sont interprétables en l'état.
+
+# --- Couche structurelle (schémas, types, clés — Atwal 2019) ---
+schema:
+  source_table: raw.transactions_raw          # produite par ingestion_dlt/
+  contract_tables:
+    - stg_transactions
+    - fct_transactions_clean
+    - fct_transactions_features
+    - agg_fraud_hourly_summary
+  columns:
+    - name: transaction_id
+      type: varchar
+      nullable: false
+      unique: true
+      description: "Clé surrogate stable, reprise de l'identifiant unique dlt (_dlt_id)."
+    - name: load_id
+      type: varchar
+      nullable: false
+      description: "Identifiant du run d'ingestion dlt (_dlt_load_id) — traçabilité (5 Q, Chapitre 1)."
+    - name: time_seconds
+      type: bigint
+      nullable: false
+      domain: ">= 0"
+      description: "Secondes écoulées depuis la première transaction du jeu de données."
+    - name: v1..v28
+      type: double
+      nullable: false
+      description: "Composantes PCA anonymisées, sans signification métier directe."
+    - name: amount
+      type: double
+      nullable: false
+      domain: ">= 0"
+      description: "Montant de la transaction."
+    - name: is_fraud
+      type: bigint
+      nullable: false
+      domain: "{0, 1}"
+      description: "0 = transaction légitime, 1 = transaction frauduleuse (variable cible)."
+    - name: hour_of_day        # fct_transactions_features uniquement
+      type: integer
+      nullable: false
+      domain: "[0, 23]"
+    - name: amount_bucket      # fct_transactions_features uniquement
+      type: varchar
+      nullable: false
+      domain: "{zero, low, medium, high, very_high}"
+
+# --- Règles de qualité (mappées sur les 11 dimensions du Chapitre 3) ---
+quality_checks:
+  - dimension: completeness
+    rule: "aucune valeur nulle sur transaction_id, amount, is_fraud, time_seconds"
+    implementation: dbt not_null (models/staging/stg_transactions.yml, models/marts/marts.yml)
+  - dimension: validity
+    rule: "is_fraud in (0,1) ; amount >= 0 ; hour_of_day in [0,23] ; amount_bucket in valeurs autorisées"
+    implementation: dbt accepted_values + test générique accepted_range (macros/generic_tests.sql)
+  - dimension: uniqueness
+    rule: "transaction_id unique sur l'ensemble des tables du contrat"
+    implementation: dbt unique
+  - dimension: business_consistency
+    rule: "amount doit être positif ou nul (aucune transaction à montant négatif)"
+    implementation: dbt_fraud/tests/assert_amount_non_negative.sql (test singulier)
+  - dimension: traceability
+    rule: "chaque ligne porte le load_id du run dlt qui l'a produite"
+    implementation: colonne load_id propagée depuis raw.transactions_raw jusqu'aux marts
+  - dimension: documentation
+    rule: "chaque colonne exposée est décrite dans les fichiers schema.yml dbt"
+    implementation: dbt_fraud/models/**/*.yml
+  - dimension: freshness
+    rule: "non applicable au sens SLA temps réel — dataset historique statique"
+    implementation: "voir docs/data/data_quality_report.md (limite assumée et documentée)"
+  - dimension: integrity
+    rule: "non applicable — schéma en étoile à une seule table de faits, pas de relation référentielle à contrôler"
+    implementation: "voir docs/data/data_quality_report.md"
+
+# --- Couche administrative (permissions, fraîcheur, rétention, propriétaire — Atwal 2019) ---
+sla:
+  freshness: "batch à la demande (dataset historique statique, pas de flux temps réel)"
+  availability: "pipeline ré-exécutable à tout moment via Dagster (dagster job execute)"
+  retention: "illimitée en local (usage pédagogique) ; creditcard.csv jamais versionné (licence Kaggle)"
+
+access:
+  sensitivity: "modérée — montants et labels de fraude réels, colonnes PCA anonymisées"
+  restrictions: "usage pédagogique uniquement, pas de redistribution du fichier source"
+
+# --- Consommateurs (Data Consumers, Chapitre 1) ---
+consumers:
+  - name: ml-training-pipeline
+    tables: [fct_transactions_features]
+    usage: "entraînement et évaluation du modèle de classification (Livrable 5/6)"
+  - name: fraud-api-service
+    tables: [fct_transactions_features]   # schéma de référence pour la validation des payloads /predict
+    usage: "service d'inférence temps réel (Livrable 7)"
+  - name: monitoring-dashboard
+    tables: [agg_fraud_hourly_summary]
+    usage: "suivi du taux de fraude et détection de dérive (Livrable 9)"
+  - name: data-analyst
+    tables: [agg_fraud_hourly_summary]
+    usage: "reporting et analyse exploratoire"
+
+# --- Changement de schéma ---
+change_management: >
+  Toute modification de ce contrat (ajout/suppression de colonne, changement
+  de domaine) doit être proposée via Pull Request sur GitHub, revue par au
+  moins un Data Engineer, et accompagnée de la mise à jour des tests dbt
+  correspondants avant d'être fusionnée (cf. principe cité en cours :
+  "un pipeline qui ne passe pas les tests ne peut pas être mergé").
