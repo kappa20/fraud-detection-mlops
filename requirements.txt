@@ -1,0 +1,41 @@
+# Versions alignées sur l'environnement déjà validé dans le TP Chapitre 2
+# (td/tp_chapitre_2/tp_chapitre2_pipeline/requirements.txt) pour limiter les
+# risques d'incompatibilité dlt / dbt-duckdb / dagster.
+
+# Ingestion
+dlt==1.27.0
+
+# Stockage analytique
+duckdb==1.5.3
+
+# Transformation
+dbt-core==1.11.11
+dbt-duckdb==1.10.1
+
+# Orchestration
+dagster==1.13.6
+dagster-webserver==1.13.6
+
+# Machine Learning
+scikit-learn==1.5.2
+pandas==2.2.3
+numpy==1.26.4
+imbalanced-learn==0.12.4
+
+# Experiment tracking & registry
+mlflow==2.17.2
+
+# Service ML
+fastapi==0.115.5
+uvicorn==0.32.1
+pydantic==2.9.2
+prometheus-fastapi-instrumentator==7.0.0
+
+# Monitoring / dérive
+evidently==0.4.40
+
+# Qualité / lint / tests
+ruff==0.7.4
+pytest==8.3.3
+
+python-dotenv==1.0.1
