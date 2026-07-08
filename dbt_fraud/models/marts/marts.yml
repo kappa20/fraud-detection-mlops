@@ -31,12 +31,22 @@ models:
       - name: hour_of_day
         tests:
           - not_null
+          - accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 23
       - name: amount_bucket
         tests:
           - not_null
           - accepted_values:
               arguments:
                 values: ['zero', 'low', 'medium', 'high', 'very_high']
+      - name: log_amount
+        tests:
+          - not_null
+          - accepted_range:
+              arguments:
+                min_value: 0
 
   - name: agg_fraud_hourly_summary
     description: Agrégat horaire du taux de fraude — produit analytique consommable en l'état.
