@@ -6,7 +6,7 @@ Projet de groupe du module **MLOps & DataOps** (Pr. Mohammed AIT DAOUD, FSBM, Un
 **Équipe :** voir [`info.txt`](../info.txt).
 **Cahier des charges :** [`PROJETS.pdf`](../PROJETS.pdf).
 
-> Statut actuel du projet : **Phase A (fondations) terminée.** Les sections marquées 🚧 ci-dessous seront complétées au fil des phases suivantes (voir [`docs/agile/product_backlog.md`](docs/agile/product_backlog.md)).
+> Statut actuel du projet : **Vision, Agile, Pipeline DataOps (dlt/DuckDB/dbt/Dagster), Qualité des données et Machine Learning/MLflow terminés.** Restent : déploiement FastAPI/Docker, CI/CD, monitoring (sections marquées 🚧 ci-dessous — voir [`docs/agile/product_backlog.md`](docs/agile/product_backlog.md)).
 
 ## Architecture cible
 
@@ -28,7 +28,7 @@ Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architec
 | [`docs/data/data_contract.yaml`](docs/data/data_contract.yaml) | Contrat de données (schéma, règles de qualité, consommateurs) | 4 |
 | [`docs/data/data_lineage.md`](docs/data/data_lineage.md) | Lignage des données, de la source au service exposé | 4 |
 | [`docs/data/data_quality_report.md`](docs/data/data_quality_report.md) | Rapport de qualité (11 dimensions du cours) sur le dataset réel | 4 |
-| [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md) 🚧 | Synthèse des expériences MLflow | 6 |
+| [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md) | Synthèse des expériences MLflow | 6 |
 | [`docs/03_installation.md`](docs/03_installation.md) 🚧 | Guide d'installation | 10 |
 | [`docs/04_guide_utilisation.md`](docs/04_guide_utilisation.md) 🚧 | Guide d'utilisation | 10 |
 
@@ -42,7 +42,7 @@ projet/
 ├── dbt_fraud/                # Projet dbt (staging + marts + tests + macros)
 ├── quality/                  # Validation shift-left du schéma
 ├── orchestration_dagster/    # Orchestration Dagster du pipeline
-├── ml/                      # 🚧 Préparation des données, entraînement, évaluation, MLflow
+├── ml/                       # Préparation des données, entraînement, évaluation, MLflow
 ├── api/                     # 🚧 Service FastAPI (/predict, /health, /metrics)
 ├── monitoring/              # 🚧 Surveillance et détection de dérive
 ├── tests/                   # 🚧 Tests automatisés + fixtures pour la CI
@@ -78,7 +78,16 @@ dagster job execute -f orchestration_dagster/fraud_dagster/job.py -a fraud_pipel
 # ou avec l'UI web :
 dagster dev -f orchestration_dagster/fraud_dagster/job.py
 ```
-Étapes exécutées : ingestion `dlt` (CSV → DuckDB) → validation shift-left → `dbt run` (staging + marts) → `dbt test` (20 tests qualité).
+Étapes exécutées : ingestion `dlt` (CSV → DuckDB) → validation shift-left → `dbt run` (staging + marts) → `dbt test` (27 tests qualité).
+
+## Entraîner le modèle et le publier dans MLflow (Phase D)
+
+```bash
+python ml/train.py            # entraîne LogisticRegression + RandomForest, logue tout dans MLflow
+mlflow ui --backend-store-uri sqlite:///mlflow.db   # explorer les runs (http://localhost:5000)
+python ml/register_model.py   # enregistre le meilleur run (PR-AUC) -> Model Registry (Production) + ml/artifacts/model.pkl
+```
+Détails et résultats : [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md).
 
 ## Équipe et rôles Agile
 
