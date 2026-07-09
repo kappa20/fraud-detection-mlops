@@ -1,0 +1,63 @@
+name: ML Pipeline CI
+
+# Reprend et étend l'exemple donné en cours (Chapitre 2, "CI avec GitHub
+# Actions"). Principe cité en cours : "Chaque push déclenche automatiquement
+# la validation complète du pipeline. Un pipeline qui ne passe pas les
+# tests ne peut pas être mergé."
+#
+# La CI ne dépend jamais du vrai dataset Kaggle (non versionné, voir
+# data/README.md) : elle exerce le pipeline complet (ingestion -> qualité
+# -> transformation -> ML -> API conteneurisée) sur une fixture
+# synthétique générée à la volée (scripts/make_sample_fixture.py).
+
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+    branches: [main, master]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Lint (ruff)
+        run: ruff check .
+
+      - name: Unit tests (API, validation, métriques ML)
+        run: pytest tests/ -v
+
+      - name: Générer la fixture synthétique (pas de données Kaggle réelles en CI)
+        run: python scripts/make_sample_fixture.py
+
+      - name: Ingestion dlt (fixture -> DuckDB)
+        run: python ingestion_dlt/run_pipeline.py --csv tests/fixtures/sample_transactions.csv --duckdb fraud_detection.duckdb
+
+      - name: Validation shift-left du schéma
+        run: python quality/validate_schema.py --duckdb fraud_detection.duckdb
+
+      - name: dbt build (staging + marts + tests qualité)
+        working-directory: dbt_fraud
+        run: dbt build --profiles-dir .
+
+      - name: Entraînement du modèle (sur la fixture)
+        run: python ml/train.py
+
+      - name: Enregistrement du modèle (Model Registry + export .pkl)
+        run: python ml/register_model.py
+
+      - name: Build de l'image Docker du service
+        run: docker build -t fraud-api:ci .
