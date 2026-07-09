@@ -6,7 +6,7 @@ Projet de groupe du module **MLOps & DataOps** (Pr. Mohammed AIT DAOUD, FSBM, Un
 **Équipe :** voir [`info.txt`](../info.txt).
 **Cahier des charges :** [`PROJETS.pdf`](../PROJETS.pdf).
 
-> Statut actuel du projet : **Vision, Agile, Pipeline DataOps (dlt/DuckDB/dbt/Dagster), Qualité des données et Machine Learning/MLflow terminés.** Restent : déploiement FastAPI/Docker, CI/CD, monitoring (sections marquées 🚧 ci-dessous — voir [`docs/agile/product_backlog.md`](docs/agile/product_backlog.md)).
+> Statut actuel du projet : **Vision, Agile, Pipeline DataOps, Qualité des données, Machine Learning/MLflow et Déploiement (FastAPI/Docker/CI-CD) terminés.** Reste : monitoring avancé (dérive) et documentation finale (sections marquées 🚧 ci-dessous — voir [`docs/agile/product_backlog.md`](docs/agile/product_backlog.md)).
 
 ## Architecture cible
 
@@ -43,12 +43,13 @@ projet/
 ├── quality/                  # Validation shift-left du schéma
 ├── orchestration_dagster/    # Orchestration Dagster du pipeline
 ├── ml/                       # Préparation des données, entraînement, évaluation, MLflow
-├── api/                     # 🚧 Service FastAPI (/predict, /health, /metrics)
+├── api/                      # Service FastAPI (/predict, /health, /metrics)
 ├── monitoring/              # 🚧 Surveillance et détection de dérive
-├── tests/                   # 🚧 Tests automatisés + fixtures pour la CI
-├── scripts/                 # 🚧 Scripts utilitaires (génération de fixtures, etc.)
-├── Dockerfile               # 🚧 Conteneurisation du service
-└── .github/workflows/       # 🚧 CI/CD GitHub Actions
+├── tests/                    # Tests automatisés + fixtures pour la CI
+├── scripts/                  # Génération de la fixture synthétique CI
+├── Dockerfile                # Conteneurisation du service
+├── docker-compose.yml
+└── .github/workflows/        # CI/CD GitHub Actions
 ```
 
 ## Prérequis — dataset
@@ -88,6 +89,28 @@ mlflow ui --backend-store-uri sqlite:///mlflow.db   # explorer les runs (http://
 python ml/register_model.py   # enregistre le meilleur run (PR-AUC) -> Model Registry (Production) + ml/artifacts/model.pkl
 ```
 Détails et résultats : [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md).
+
+## Lancer le service de scoring (Phase E)
+
+```bash
+# En local (sans Docker) :
+uvicorn api.main:app --reload
+# puis : curl http://localhost:8000/health
+
+# Avec Docker :
+docker build -t fraud-api .
+docker run -p 8000:8000 fraud-api
+# ou : docker compose up --build
+```
+Endpoints : `GET /health`, `POST /predict`, `GET /metrics` (Prometheus).
+
+## Tests et CI/CD (Phase E)
+
+```bash
+pytest tests/ -v      # tests unitaires (API, validation, métriques ML) — indépendants du dataset réel
+ruff check .           # lint
+```
+La CI GitHub Actions (`.github/workflows/ci.yml`) exécute, à chaque push/PR, le pipeline complet (lint → tests → génération d'une fixture synthétique → ingestion dlt → validation → `dbt build` → entraînement → enregistrement du modèle → `docker build`) sans jamais dépendre du vrai fichier Kaggle. Principe cité en cours : *"Un pipeline qui ne passe pas les tests ne peut pas être mergé."*
 
 ## Équipe et rôles Agile
 
