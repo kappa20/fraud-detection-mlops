@@ -28,9 +28,16 @@ def main() -> None:
             "Voir data/README.md pour les instructions de telechargement du dataset Kaggle."
         )
 
+    # dlt persiste localement (~/.dlt/pipelines/<nom>/) le CWD du premier run
+    # et l'utilise pour resoudre les chemins relatifs des runs suivants, meme
+    # depuis un autre repertoire : on resout donc toujours en chemin absolu
+    # pour ne pas dependre de cet etat cache (piege reproductibilite —
+    # cf. Chapitre 2, "ca marche sur mon laptop / ca marche pas ailleurs").
+    duckdb_path = str(Path(args.duckdb).resolve())
+
     pipeline = dlt.pipeline(
         pipeline_name="fraud_ingestion",
-        destination=dlt.destinations.duckdb(args.duckdb),
+        destination=dlt.destinations.duckdb(duckdb_path),
         dataset_name="raw",
     )
     load_info = pipeline.run(creditcard_source(args.csv))
