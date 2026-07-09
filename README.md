@@ -5,8 +5,9 @@ Projet de groupe du module **MLOps & DataOps** (Pr. Mohammed AIT DAOUD, FSBM, Un
 **Sujet :** Détection de fraude bancaire — Classification des transactions frauduleuses (Finance).
 **Équipe :** voir [`info.txt`](../info.txt).
 **Cahier des charges :** [`PROJETS.pdf`](../PROJETS.pdf).
+**Rapport final (Livrable 7) :** [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md).
 
-> Statut actuel du projet : **Vision, Agile, Pipeline DataOps, Qualité des données, Machine Learning/MLflow et Déploiement (FastAPI/Docker/CI-CD) terminés.** Reste : monitoring avancé (dérive) et documentation finale (sections marquées 🚧 ci-dessous — voir [`docs/agile/product_backlog.md`](docs/agile/product_backlog.md)).
+> **Statut : les 10 livrables du cahier des charges sont complets.** Voir le mapping détaillé dans [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md#5-mapping-des-10-livrables-du-cahier-des-charges).
 
 ## Architecture cible
 
@@ -17,20 +18,22 @@ Sources de données → dlt (ingestion automatisée) → DuckDB (stockage local)
    → Conteneurisation (Docker) → CI/CD (GitHub Actions) → Monitoring & Observabilité
 ```
 
-Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architecture.md) 🚧.
+Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architecture.md).
 
 ## Documentation
 
 | Document | Contenu | Livrable |
 |---|---|---|
+| [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md) | Synthèse finale, résultats clés, plan de démo orale | 7 |
 | [`docs/01_vision.md`](docs/01_vision.md) | Problématique, objectifs, utilisateurs cibles, valeur métier, Data Strategy | 1 |
-| [`docs/agile/`](docs/agile/) | Product Backlog, User Stories, Sprint Planning/Review/Retrospective | 2 |
+| [`docs/agile/`](docs/agile/) | Product Backlog, User Stories, Sprint Planning/Review/Retrospective (3 sprints) | 2 |
 | [`docs/data/data_contract.yaml`](docs/data/data_contract.yaml) | Contrat de données (schéma, règles de qualité, consommateurs) | 4 |
 | [`docs/data/data_lineage.md`](docs/data/data_lineage.md) | Lignage des données, de la source au service exposé | 4 |
 | [`docs/data/data_quality_report.md`](docs/data/data_quality_report.md) | Rapport de qualité (11 dimensions du cours) sur le dataset réel | 4 |
 | [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md) | Synthèse des expériences MLflow | 6 |
-| [`docs/03_installation.md`](docs/03_installation.md) 🚧 | Guide d'installation | 10 |
-| [`docs/04_guide_utilisation.md`](docs/04_guide_utilisation.md) 🚧 | Guide d'utilisation | 10 |
+| [`docs/02_architecture.md`](docs/02_architecture.md) | Architecture complète, décisions techniques, limites assumées | 10 |
+| [`docs/03_installation.md`](docs/03_installation.md) | Guide d'installation | 10 |
+| [`docs/04_guide_utilisation.md`](docs/04_guide_utilisation.md) | Guide d'utilisation | 10 |
 
 ## Structure du dépôt
 
@@ -44,7 +47,7 @@ projet/
 ├── orchestration_dagster/    # Orchestration Dagster du pipeline
 ├── ml/                       # Préparation des données, entraînement, évaluation, MLflow
 ├── api/                      # Service FastAPI (/predict, /health, /metrics)
-├── monitoring/              # 🚧 Surveillance et détection de dérive
+├── monitoring/               # Détection de dérive (PSI) + logs de prédiction
 ├── tests/                    # Tests automatisés + fixtures pour la CI
 ├── scripts/                  # Génération de la fixture synthétique CI
 ├── Dockerfile                # Conteneurisation du service
@@ -58,7 +61,7 @@ Le pipeline s'appuie sur le dataset public **"Credit Card Fraud Detection" (ULB)
 
 ## Installation
 
-Détaillé dans [`docs/03_installation.md`](docs/03_installation.md) 🚧 (Phase F). En résumé, environnement conda (recommandé, testé) :
+Détaillé dans [`docs/03_installation.md`](docs/03_installation.md). En résumé, environnement conda (recommandé, testé) :
 ```bash
 conda create -n mlops_fraud python=3.11
 conda activate mlops_fraud
@@ -70,7 +73,7 @@ python3.11 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 ```
 
-## Exécuter le pipeline DataOps (Phase B)
+## Exécuter le pipeline DataOps
 
 ```bash
 # 1. Placer data/raw/creditcard.csv (voir data/README.md)
@@ -81,7 +84,7 @@ dagster dev -f orchestration_dagster/fraud_dagster/job.py
 ```
 Étapes exécutées : ingestion `dlt` (CSV → DuckDB) → validation shift-left → `dbt run` (staging + marts) → `dbt test` (27 tests qualité).
 
-## Entraîner le modèle et le publier dans MLflow (Phase D)
+## Entraîner le modèle et le publier dans MLflow
 
 ```bash
 python ml/train.py            # entraîne LogisticRegression + RandomForest, logue tout dans MLflow
@@ -90,7 +93,7 @@ python ml/register_model.py   # enregistre le meilleur run (PR-AUC) -> Model Reg
 ```
 Détails et résultats : [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md).
 
-## Lancer le service de scoring (Phase E)
+## Lancer le service de scoring
 
 ```bash
 # En local (sans Docker) :
@@ -104,7 +107,14 @@ docker run -p 8000:8000 fraud-api
 ```
 Endpoints : `GET /health`, `POST /predict`, `GET /metrics` (Prometheus).
 
-## Tests et CI/CD (Phase E)
+## Monitoring et dérive
+
+```bash
+python monitoring/drift_check.py   # rapport PSI -> monitoring/drift_report.md
+```
+Chaque appel à `/predict` est journalisé dans `monitoring/predictions_log.jsonl`. Détails : [`docs/04_guide_utilisation.md`](docs/04_guide_utilisation.md#6-surveiller-le-service).
+
+## Tests et CI/CD
 
 ```bash
 pytest tests/ -v      # tests unitaires (API, validation, métriques ML) — indépendants du dataset réel

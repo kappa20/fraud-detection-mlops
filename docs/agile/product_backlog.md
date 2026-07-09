@@ -33,6 +33,8 @@ Ce backlog découpe les 10 livrables du cahier des charges (`../../PROJETS.pdf`)
 
 **Total estimé : 71 points sur 3 sprints** (~24 points/sprint en moyenne — cohérent avec une équipe de 9 personnes sur des sprints courts).
 
+**Statut : les 20 user stories (71 points) sont livrées** — voir le détail dans les Sprint Reviews (`sprint_1_review.md`, `sprint_2_review.md`, `sprint_3_review.md`) et la synthèse finale dans `../../RAPPORT_FINAL.md`.
+
 ## Definition of Done (DoD) — commune à toutes les user stories
 - Code versionné sur Git, revu via Pull Request par au moins un autre membre de l'équipe.
 - Tests associés (dbt test, pytest) exécutés et passants.
