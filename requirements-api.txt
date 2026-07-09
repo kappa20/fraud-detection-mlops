@@ -1,0 +1,11 @@
+# Dépendances minimales du service FastAPI (image Docker Livrable 7) :
+# volontairement un sous-ensemble léger de requirements.txt, sans dlt/
+# dbt/dagster/mlflow (inutiles à l'inférence, ils alourdiraient l'image).
+fastapi==0.136.3
+uvicorn==0.48.0
+pydantic==2.13.4
+scikit-learn==1.4.2
+pandas==2.1.4
+numpy==1.26.4
+joblib==1.3.2
+prometheus-fastapi-instrumentator==7.0.0
