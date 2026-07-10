@@ -16,7 +16,7 @@ Ce sprint correspond aux Phases E et F : c'est le sprint qui rend le projet rée
 | US-16 | Conteneurisation Docker | 3 | Youssef Sarraf |
 | US-17 | CI/CD GitHub Actions | 5 | Anass Dabibe |
 | US-18 | Monitoring (disponibilité, latence, métriques ML) | 3 | Aymane El Badri |
-| US-19 | Rapport de dérive simple | 3 | Étudiante 2 (Data Analyst) |
+| US-19 | Rapport de dérive simple | 3 | EL HABTI Oumaima (Data Analyst) |
 | US-20 | README + guides d'installation/utilisation | 3 | Hassan El Hadi (PO) |
 
 **Capacité du sprint :** 23 points.

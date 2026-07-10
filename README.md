@@ -130,4 +130,4 @@ La CI GitHub Actions (`.github/workflows/ci.yml`) exécute, à chaque push/PR, l
 | Scrum Master | Yassin Farih |
 | Data Engineer | Anass Dabibe (lead), Adnane Dahbi, Seif |
 | ML Engineer | Aymane El Badri, Youssef Sarraf |
-| Data Analyst | Étudiante 1, Étudiante 2 *(noms à compléter)* |
+| Data Analyst | ASSOFI Nada, EL HABTI Oumaima |

@@ -6,8 +6,8 @@ Members:
 - Aymane El badri
 - Seif
 - Youssef Sarraf
-- girl number 1
-- girl number 2
+- ASSOFI Nada
+- EL HABTI Oumaima
 
 machine learning project path:
 - projet numero 3 : Détection de fraude
@@ -22,5 +22,5 @@ Roles Agile (repartition, cumul possible) :
 - Data Engineer       : Seif
 - ML Engineer         : Aymane El Badri
 - ML Engineer         : Youssef Sarraf
-- Data Analyst        : girl number 1 (nom a completer)
-- Data Analyst        : girl number 2 (nom a completer)
+- Data Analyst        : ASSOFI Nada
+- Data Analyst        : EL HABTI Oumaima
