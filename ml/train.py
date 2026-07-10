@@ -35,7 +35,7 @@ ARTIFACTS_DIR = Path(__file__).resolve().parent / "artifacts"
 DBT_RUN_RESULTS = PROJECT_ROOT / "dbt_fraud" / "target" / "run_results.json"
 
 EXPERIMENT_NAME = "fraud_detection"
-TRAINED_BY = "Aymane El Badri (ML Engineer)"
+TRAINED_BY = "ML Engineer 1"
 
 
 def _git_commit() -> str:
