@@ -11,13 +11,13 @@ Ce sprint correspond aux Phases E et F : c'est le sprint qui rend le projet rée
 
 | ID | User Story (résumé) | Points | Assigné |
 |---|---|---|---|
-| US-14 | `POST /predict` | 5 | Youssef Sarraf |
-| US-15 | `GET /health` | 1 | Youssef Sarraf |
-| US-16 | Conteneurisation Docker | 3 | Youssef Sarraf |
-| US-17 | CI/CD GitHub Actions | 5 | Anass Dabibe |
-| US-18 | Monitoring (disponibilité, latence, métriques ML) | 3 | Aymane El Badri |
-| US-19 | Rapport de dérive simple | 3 | EL HABTI Oumaima (Data Analyst) |
-| US-20 | README + guides d'installation/utilisation | 3 | Hassan El Hadi (PO) |
+| US-14 | `POST /predict` | 5 | ML Engineer 2 |
+| US-15 | `GET /health` | 1 | ML Engineer 2 |
+| US-16 | Conteneurisation Docker | 3 | ML Engineer 2 |
+| US-17 | CI/CD GitHub Actions | 5 | Data Engineer (lead) |
+| US-18 | Monitoring (disponibilité, latence, métriques ML) | 3 | ML Engineer 1 |
+| US-19 | Rapport de dérive simple | 3 | Data Analyst 2 (Data Analyst) |
+| US-20 | README + guides d'installation/utilisation | 3 | Product Owner (PO) |
 
 **Capacité du sprint :** 23 points.
 

@@ -1,13 +1,4 @@
-Members:
-- Anass Dabibe
-- Hassan El Hadi
-- Yassin Farih
-- Adnane dahbi
-- Aymane El badri
-- Seif
-- Youssef Sarraf
-- ASSOFI Nada
-- EL HABTI Oumaima
+Members: 9 people (names withheld from the public repo — see private team record kept outside this repository)
 
 machine learning project path:
 - projet numero 3 : Détection de fraude
@@ -15,12 +6,12 @@ machine learning project path:
     des transactions frauduleuses
 
 Roles Agile (repartition, cumul possible) :
-- Product Owner       : Hassan El Hadi
-- Scrum Master        : Yassin Farih
-- Data Engineer (lead): Anass Dabibe
-- Data Engineer       : Adnane Dahbi
-- Data Engineer       : Seif
-- ML Engineer         : Aymane El Badri
-- ML Engineer         : Youssef Sarraf
-- Data Analyst        : ASSOFI Nada
-- Data Analyst        : EL HABTI Oumaima
+- Product Owner       : Product Owner
+- Scrum Master        : Scrum Master
+- Data Engineer (lead): Data Engineer (lead)
+- Data Engineer       : Data Engineer 2
+- Data Engineer       : Data Engineer 3
+- ML Engineer         : ML Engineer 1
+- ML Engineer         : ML Engineer 2
+- Data Analyst        : Data Analyst 1
+- Data Analyst        : Data Analyst 2

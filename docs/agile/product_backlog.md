@@ -1,12 +1,12 @@
 # Product Backlog — Détection de fraude bancaire
 
-**Product Owner :** Hassan El Hadi
-**Scrum Master :** Yassin Farih
+**Product Owner :** Product Owner
+**Scrum Master :** Scrum Master
 **Format des User Stories :** *En tant que \<rôle\>, je veux \<besoin\>, afin de \<valeur\>.*
 **Estimation :** points en échelle de Fibonacci (1, 2, 3, 5, 8, 13)
 **Priorité :** Must (M) / Should (S) / Could (C) — inspiré MoSCoW
 
-Ce backlog découpe les 10 livrables du cahier des charges (`../../PROJETS.pdf`) en user stories exploitables sur 3 sprints. Chaque story référence le livrable auquel elle contribue.
+Ce backlog découpe les 10 livrables du cahier des charges du module en user stories exploitables sur 3 sprints. Chaque story référence le livrable auquel elle contribue.
 
 | ID | User Story | Livrable | Priorité | Points | Sprint |
 |---|---|---|---|---|---|
@@ -33,7 +33,7 @@ Ce backlog découpe les 10 livrables du cahier des charges (`../../PROJETS.pdf`)
 
 **Total estimé : 71 points sur 3 sprints** (~24 points/sprint en moyenne — cohérent avec une équipe de 9 personnes sur des sprints courts).
 
-**Statut : les 20 user stories (71 points) sont livrées** — voir le détail dans les Sprint Reviews (`sprint_1_review.md`, `sprint_2_review.md`, `sprint_3_review.md`) et la synthèse finale dans `../../RAPPORT_FINAL.md`.
+**Statut : les 20 user stories (71 points) sont livrées** — voir le détail dans les Sprint Reviews (`sprint_1_review.md`, `sprint_2_review.md`, `sprint_3_review.md`) et la synthèse finale dans le rapport final (conservé hors dépôt).
 
 ## Definition of Done (DoD) — commune à toutes les user stories
 - Code versionné sur Git, revu via Pull Request par au moins un autre membre de l'équipe.

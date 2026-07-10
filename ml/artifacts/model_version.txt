@@ -1,1 +1,1 @@
-fraud-detection-classifier v1 (run_id=4c6a044ba67c4192ab44e5f1b65b2770, pr_auc=0.8444, stage=Production)
+fraud-detection-classifier v2 (run_id=137b1b77a19c469888c230ca70f2b4de, pr_auc=0.8444, stage=Production)

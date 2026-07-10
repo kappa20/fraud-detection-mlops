@@ -3,11 +3,12 @@
 Projet de groupe du module **MLOps & DataOps** (Pr. Mohammed AIT DAOUD, FSBM, Université Hassan II de Casablanca, 2025/2026).
 
 **Sujet :** Détection de fraude bancaire — Classification des transactions frauduleuses (Finance).
-**Équipe :** voir [`info.txt`](../info.txt).
-**Cahier des charges :** [`PROJETS.pdf`](../PROJETS.pdf).
-**Rapport final (Livrable 7) :** [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md).
+**Réalisé par :** équipe de 9 personnes — voir [`info.txt`](info.txt) pour la répartition des rôles Agile.
+**Encadré par :** Pr. Mohammed AIT DAOUD.
+**Cahier des charges :** cahier des charges du module (fourni séparément).
+**Rapport final (Livrable 7) :** conservé hors dépôt (document de soutenance).
 
-> **Statut : les 10 livrables du cahier des charges sont complets.** Voir le mapping détaillé dans [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md#5-mapping-des-10-livrables-du-cahier-des-charges).
+> **Statut : les 10 livrables du cahier des charges sont complets.** Voir le mapping détaillé dans le rapport final (conservé hors dépôt).
 
 ## Architecture cible
 
@@ -24,7 +25,6 @@ Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architec
 
 | Document | Contenu | Livrable |
 |---|---|---|
-| [`RAPPORT_FINAL.md`](RAPPORT_FINAL.md) | Synthèse finale, résultats clés, plan de démo orale | 7 |
 | [`docs/01_vision.md`](docs/01_vision.md) | Problématique, objectifs, utilisateurs cibles, valeur métier, Data Strategy | 1 |
 | [`docs/agile/`](docs/agile/) | Product Backlog, User Stories, Sprint Planning/Review/Retrospective (3 sprints) | 2 |
 | [`docs/data/data_contract.yaml`](docs/data/data_contract.yaml) | Contrat de données (schéma, règles de qualité, consommateurs) | 4 |
@@ -126,8 +126,8 @@ La CI GitHub Actions (`.github/workflows/ci.yml`) exécute, à chaque push/PR, l
 
 | Rôle | Membre(s) |
 |---|---|
-| Product Owner | Hassan El Hadi |
-| Scrum Master | Yassin Farih |
-| Data Engineer | Anass Dabibe (lead), Adnane Dahbi, Seif |
-| ML Engineer | Aymane El Badri, Youssef Sarraf |
-| Data Analyst | ASSOFI Nada, EL HABTI Oumaima |
+| Product Owner | Product Owner |
+| Scrum Master | Scrum Master |
+| Data Engineer | Data Engineer (lead), Data Engineer 2, Data Engineer 3 |
+| ML Engineer | ML Engineer 1, ML Engineer 2 |
+| Data Analyst | Data Analyst 1, Data Analyst 2 |

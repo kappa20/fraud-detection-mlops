@@ -10,13 +10,13 @@ Ce sprint correspond aux Phases A et B du plan d'implémentation technique : fon
 
 | ID | User Story (résumé) | Points | Assigné |
 |---|---|---|---|
-| US-01 | Vision du projet | 3 | Hassan El Hadi (PO) |
-| US-02 | Product Backlog + planning des sprints | 2 | Yassin Farih (SM) |
-| US-03 | Initialisation du dépôt Git | 2 | Anass Dabibe |
-| US-04 | Ingestion `dlt` → `DuckDB` | 5 | Anass Dabibe |
-| US-05 | Validation shift-left du schéma | 3 | Seif |
-| US-06 | Transformations `dbt` (staging + marts) | 5 | Adnane Dahbi |
-| US-07 | Orchestration `Dagster` | 5 | Adnane Dahbi |
+| US-01 | Vision du projet | 3 | Product Owner |
+| US-02 | Product Backlog + planning des sprints | 2 | Scrum Master |
+| US-03 | Initialisation du dépôt Git | 2 | Data Engineer (lead) |
+| US-04 | Ingestion `dlt` → `DuckDB` | 5 | Data Engineer (lead) |
+| US-05 | Validation shift-left du schéma | 3 | Data Engineer 3 |
+| US-06 | Transformations `dbt` (staging + marts) | 5 | Data Engineer 2 |
+| US-07 | Orchestration `Dagster` | 5 | Data Engineer 2 |
 
 **Capacité du sprint :** 25 points (7 membres actifs sur ce sprint, 2 Data Analysts en observation/préparation Sprint 2).
 
@@ -25,6 +25,6 @@ Ce sprint correspond aux Phases A et B du plan d'implémentation technique : fon
 - **Prise en main de dlt/dbt-duckdb/Dagster** : aucun membre n'a une expérience approfondie de ces outils au-delà du TP du Chapitre 2 — mitigation : s'appuyer sur le pattern déjà validé par le professeur dans ce TP (`td/tp_chapitre_2/`).
 
 ## Definition of Ready (avant d'entrer dans le sprint)
-- Cahier des charges (`PROJETS.pdf`) lu par toute l'équipe.
+- Cahier des charges du module lu par toute l'équipe.
 - Rôles Agile attribués (voir `../../info.txt`).
 - Environnement Python installable via `requirements.txt`.

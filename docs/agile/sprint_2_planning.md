@@ -11,12 +11,12 @@ Ce sprint correspond aux Phases C et D du plan d'implémentation. Il applique di
 
 | ID | User Story (résumé) | Points | Assigné |
 |---|---|---|---|
-| US-08 | Data Contract | 3 | Seif |
-| US-09 | Data Lineage | 3 | ASSOFI Nada (Data Analyst) |
-| US-10 | Tests dbt étendus (schéma/contenu/métier) | 3 | Anass Dabibe |
-| US-11 | Préparation des données (split stratifié) | 3 | Aymane El Badri |
-| US-12 | Entraînement + comparaison de modèles (MLflow) | 8 | Aymane El Badri |
-| US-13 | Model Registry (Staging → Production) | 3 | Youssef Sarraf |
+| US-08 | Data Contract | 3 | Data Engineer 3 |
+| US-09 | Data Lineage | 3 | Data Analyst 1 (Data Analyst) |
+| US-10 | Tests dbt étendus (schéma/contenu/métier) | 3 | Data Engineer (lead) |
+| US-11 | Préparation des données (split stratifié) | 3 | ML Engineer 1 |
+| US-12 | Entraînement + comparaison de modèles (MLflow) | 8 | ML Engineer 1 |
+| US-13 | Model Registry (Staging → Production) | 3 | ML Engineer 2 |
 
 **Capacité du sprint :** 23 points.
 
