@@ -14,7 +14,7 @@ Voir [`docs/01_vision.md`](docs/01_vision.md) pour le détail complet (probléma
 
 ## 2. Organisation Agile
 
-- **Rôles** : Product Owner (Hassan El Hadi), Scrum Master (Yassin Farih), Data Engineers (Anass Dabibe — lead, Adnane Dahbi, Seif), ML Engineers (Aymane El Badri, Youssef Sarraf), Data Analysts (2 étudiantes, noms à compléter dans `info.txt`).
+- **Rôles** : Product Owner (Hassan El Hadi), Scrum Master (Yassin Farih), Data Engineers (Anass Dabibe — lead, Adnane Dahbi, Seif), ML Engineers (Aymane El Badri, Youssef Sarraf), Data Analysts (ASSOFI Nada, EL HABTI Oumaima).
 - **3 sprints** réalisés (minimum imposé par le cahier des charges), chacun avec Planning / Review / Retrospective : voir [`docs/agile/`](docs/agile/).
   - Sprint 1 : fondations + pipeline DataOps (dlt/DuckDB/dbt/Dagster).
   - Sprint 2 : qualité des données (Data Contract, lineage) + Machine Learning/MLflow.
@@ -34,36 +34,36 @@ Détail complet : [`docs/02_architecture.md`](docs/02_architecture.md). Lignage 
 
 ## 4. Résultats clés (vérifiés, pas estimés)
 
-| Indicateur | Valeur |
-|---|---|
-| Transactions ingérées (`dlt` → DuckDB) | 284 807 |
-| Fraudes | 492 (0,1727 %) |
-| Tests qualité dbt | **27/27 PASS** (schéma, contenu, métier) |
-| Modèle retenu | RandomForest (`class_weight="balanced_subsample"`) |
-| PR-AUC (modèle retenu / baseline) | **0,8444** / 0,7200 |
-| Recall / Precision (seuil optimal) | 0,8163 / 0,8421 |
-| Fraudes détectées sur le jeu de test | 80 / 98 |
-| Tests unitaires (API, validation, métriques) | **12/12 PASS** |
-| Endpoints API | `GET /health`, `POST /predict`, `GET /metrics` — tous testés en local et en conteneur Docker |
-| CI/CD | Pipeline complet (lint → tests → ingestion → qualité → dbt → ML → registry → build Docker) validé dans un clone isolé |
-| Dérive (PSI, `amount`/`log_amount`/`hour_of_day`) | < 0,01 — pas de dérive significative sur la période couverte (~2 jours) |
+| Indicateur                                              | Valeur                                                                                                                          |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| Transactions ingérées (`dlt` → DuckDB)             | 284 807                                                                                                                         |
+| Fraudes                                                 | 492 (0,1727 %)                                                                                                                  |
+| Tests qualité dbt                                      | **27/27 PASS** (schéma, contenu, métier)                                                                                |
+| Modèle retenu                                          | RandomForest (`class_weight="balanced_subsample"`)                                                                            |
+| PR-AUC (modèle retenu / baseline)                      | **0,8444** / 0,7200                                                                                                       |
+| Recall / Precision (seuil optimal)                      | 0,8163 / 0,8421                                                                                                                 |
+| Fraudes détectées sur le jeu de test                  | 80 / 98                                                                                                                         |
+| Tests unitaires (API, validation, métriques)           | **12/12 PASS**                                                                                                            |
+| Endpoints API                                           | `GET /health`, `POST /predict`, `GET /metrics` — tous testés en local et en conteneur Docker                            |
+| CI/CD                                                   | Pipeline complet (lint → tests → ingestion → qualité → dbt → ML → registry → build Docker) validé dans un clone isolé |
+| Dérive (PSI,`amount`/`log_amount`/`hour_of_day`) | < 0,01 — pas de dérive significative sur la période couverte (~2 jours)                                                      |
 
 Détails : [`docs/data/data_quality_report.md`](docs/data/data_quality_report.md), [`docs/ml/experiments_summary.md`](docs/ml/experiments_summary.md).
 
 ## 5. Mapping des 10 livrables du cahier des charges
 
-| # | Livrable | Statut | Où |
-|---|---|---|---|
-| 1 | Vision du projet | ✅ | `docs/01_vision.md` |
-| 2 | Gestion Agile (3 sprints) | ✅ | `docs/agile/` |
-| 3 | Pipeline DataOps (dlt/DuckDB/dbt/Dagster) | ✅ | `ingestion_dlt/`, `dbt_fraud/`, `orchestration_dagster/` |
-| 4 | Qualité des données (Data Contract, Lineage) | ✅ | `docs/data/` |
-| 5 | Machine Learning | ✅ | `ml/prepare_data.py`, `ml/train.py`, `ml/evaluate.py` |
-| 6 | MLflow (Tracking + Registry) | ✅ | `ml/register_model.py`, `docs/ml/experiments_summary.md` |
-| 7 | Déploiement (FastAPI + Docker) | ✅ | `api/`, `Dockerfile` |
-| 8 | CI/CD | ✅ | `.github/workflows/ci.yml` |
-| 9 | Monitoring | ✅ | `monitoring/`, `GET /metrics` |
-| 10 | Documentation | ✅ | `README.md`, `docs/02_architecture.md`, `docs/03_installation.md`, `docs/04_guide_utilisation.md` |
+| #  | Livrable                                       | Statut | Où                                                                                                       |
+| -- | ---------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------- |
+| 1  | Vision du projet                               | ✅     | `docs/01_vision.md`                                                                                     |
+| 2  | Gestion Agile (3 sprints)                      | ✅     | `docs/agile/`                                                                                           |
+| 3  | Pipeline DataOps (dlt/DuckDB/dbt/Dagster)      | ✅     | `ingestion_dlt/`, `dbt_fraud/`, `orchestration_dagster/`                                            |
+| 4  | Qualité des données (Data Contract, Lineage) | ✅     | `docs/data/`                                                                                            |
+| 5  | Machine Learning                               | ✅     | `ml/prepare_data.py`, `ml/train.py`, `ml/evaluate.py`                                               |
+| 6  | MLflow (Tracking + Registry)                   | ✅     | `ml/register_model.py`, `docs/ml/experiments_summary.md`                                              |
+| 7  | Déploiement (FastAPI + Docker)                | ✅     | `api/`, `Dockerfile`                                                                                  |
+| 8  | CI/CD                                          | ✅     | `.github/workflows/ci.yml`                                                                              |
+| 9  | Monitoring                                     | ✅     | `monitoring/`, `GET /metrics`                                                                         |
+| 10 | Documentation                                  | ✅     | `README.md`, `docs/02_architecture.md`, `docs/03_installation.md`, `docs/04_guide_utilisation.md` |
 
 ## 6. Un exemple concret d'ingénierie MLOps rencontré pendant le projet
 
