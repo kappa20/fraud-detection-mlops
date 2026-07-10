@@ -44,3 +44,6 @@ prometheus-fastapi-instrumentator==7.0.0
 # Qualité / lint / tests
 ruff==0.7.4
 pytest==9.0.2
+# httpx : requis par starlette.testclient.TestClient (utilisé par
+# tests/test_api.py), non installé automatiquement avec fastapi/starlette
+httpx==0.28.1
