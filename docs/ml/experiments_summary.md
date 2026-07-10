@@ -36,7 +36,7 @@ Chaque run porte les tags suivants, vérifiables dans `mlflow ui` :
 |---|---|---|
 | `data_version` | `284807_rows` | Quelle donnée ? |
 | `code_version` | hash du commit Git au moment de l'entraînement | Quelle version ? |
-| `trained_by` | `Aymane El Badri (ML Engineer)` | Quel responsable ? |
+| `trained_by` | `ML Engineer 1` | Quel responsable ? |
 | `dbt_test_status` | statut des tests dbt (ex. `23/23 PASS`) au moment du run | Quelle validation ? |
 
 *(Le nom du modèle et sa version — "Quel modèle ?" — sont directement portés par le Model Registry MLflow.)*

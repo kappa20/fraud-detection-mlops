@@ -9,7 +9,7 @@ Sources de données → dlt (ingestion automatisée) → DuckDB (stockage local)
    → Conteneurisation (Docker) → CI/CD (GitHub Actions) → Monitoring & Observabilité
 ```
 
-Cette architecture est celle imposée par le cahier des charges (`../PROJETS.pdf`) ; l'implémentation détaillée de chaque brique est documentée ci-dessous et dans `docs/data/data_lineage.md` (lignage détaillé) et `docs/ml/experiments_summary.md` (détail ML/MLflow).
+Cette architecture est celle imposée par le cahier des charges du module ; l'implémentation détaillée de chaque brique est documentée ci-dessous et dans `docs/data/data_lineage.md` (lignage détaillé) et `docs/ml/experiments_summary.md` (détail ML/MLflow).
 
 ## Composants et responsabilités
 

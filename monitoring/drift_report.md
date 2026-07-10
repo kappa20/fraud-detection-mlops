@@ -8,4 +8,8 @@ Référence : 142403 transactions (1ère moitié temporelle) — Récent : 14240
 | log_amount | 0.0027 | pas de dérive significative |
 | hour_of_day | 0.0034 | pas de dérive significative |
 
-Aucune prédiction journalisée par l'API à ce jour (`monitoring/predictions_log.jsonl` absent ou vide) — comparaison limitée aux deux fenêtres temporelles du dataset d'entraînement.
+Comparaison avec 2 prédictions réelles journalisées par l'API (`monitoring/predictions_log.jsonl`) :
+
+| Colonne | PSI | Interprétation |
+|---|---|---|
+| amount (trafic API) | 12.4461 | dérive significative — ré-entraînement à envisager |
