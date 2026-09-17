@@ -38,7 +38,7 @@ services:
       - ./mlflow_snapshot/mlruns:/mlflow/mlruns:ro
     command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/mlruns --host 0.0.0.0 --port 5000
     ports:
-      - "5001:5000"
+      - "5002:5000"
     networks:
       - fraud_net
     restart: unless-stopped
