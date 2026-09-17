@@ -1,9 +1,10 @@
 services:
+
   api:
     build: .
     container_name: fraud-api
     ports:
-      - "${API_HOST_PORT}:8000"
+      - "4601:8000"
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
@@ -22,7 +23,7 @@ services:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
     ports:
-      - "${PROMETHEUS_HOST_PORT}:9090"
+      - "4604:9090"
     depends_on:
       - api
     networks:
@@ -38,7 +39,7 @@ services:
       - ./mlflow_snapshot/mlruns:/mlflow/mlruns:ro
     command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/mlruns --host 0.0.0.0 --port 5000
     ports:
-      - "${MLFLOW_HOST_PORT}:5000"
+      - "4602:5000"
     networks:
       - fraud_net
     restart: unless-stopped
@@ -54,7 +55,7 @@ services:
       - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     ports:
-      - "${GRAFANA_HOST_PORT}:3000"
+      - "4603:3000"
     depends_on:
       - prometheus
     networks:
