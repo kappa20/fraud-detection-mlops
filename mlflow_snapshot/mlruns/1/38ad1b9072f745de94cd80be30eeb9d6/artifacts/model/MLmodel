@@ -1,0 +1,49 @@
+artifact_path: model
+flavors:
+  python_function:
+    env:
+      conda: conda.yaml
+      virtualenv: python_env.yaml
+    loader_module: mlflow.sklearn
+    model_path: model.pkl
+    predict_fn: predict
+    python_version: 3.11.13
+  sklearn:
+    code: null
+    pickled_model: model.pkl
+    serialization_format: cloudpickle
+    sklearn_version: 1.4.2
+mlflow_version: 2.17.2
+model_size_bytes: 7285
+model_uuid: 804b62aeb2a749cba1e522ae309cbf2f
+run_id: 38ad1b9072f745de94cd80be30eeb9d6
+saved_input_example_info:
+  artifact_path: input_example.json
+  pandas_orient: split
+  serving_input_path: serving_input_example.json
+  type: dataframe
+signature:
+  inputs: '[{"type": "double", "name": "v1", "required": true}, {"type": "double",
+    "name": "v2", "required": true}, {"type": "double", "name": "v3", "required":
+    true}, {"type": "double", "name": "v4", "required": true}, {"type": "double",
+    "name": "v5", "required": true}, {"type": "double", "name": "v6", "required":
+    true}, {"type": "double", "name": "v7", "required": true}, {"type": "double",
+    "name": "v8", "required": true}, {"type": "double", "name": "v9", "required":
+    true}, {"type": "double", "name": "v10", "required": true}, {"type": "double",
+    "name": "v11", "required": true}, {"type": "double", "name": "v12", "required":
+    true}, {"type": "double", "name": "v13", "required": true}, {"type": "double",
+    "name": "v14", "required": true}, {"type": "double", "name": "v15", "required":
+    true}, {"type": "double", "name": "v16", "required": true}, {"type": "double",
+    "name": "v17", "required": true}, {"type": "double", "name": "v18", "required":
+    true}, {"type": "double", "name": "v19", "required": true}, {"type": "double",
+    "name": "v20", "required": true}, {"type": "double", "name": "v21", "required":
+    true}, {"type": "double", "name": "v22", "required": true}, {"type": "double",
+    "name": "v23", "required": true}, {"type": "double", "name": "v24", "required":
+    true}, {"type": "double", "name": "v25", "required": true}, {"type": "double",
+    "name": "v26", "required": true}, {"type": "double", "name": "v27", "required":
+    true}, {"type": "double", "name": "v28", "required": true}, {"type": "double",
+    "name": "amount", "required": true}, {"type": "double", "name": "log_amount",
+    "required": true}, {"type": "integer", "name": "hour_of_day", "required": true}]'
+  outputs: '[{"type": "long", "required": true}]'
+  params: null
+utc_time_created: '2026-07-08 23:08:55.927688'
