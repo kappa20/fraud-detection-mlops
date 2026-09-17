@@ -3,7 +3,7 @@ services:
     build: .
     container_name: fraud-api
     ports:
-      - "${API_HOST_PORT:-8000}:8000"
+      - "0.0.0.0:8000:8000"
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
@@ -11,6 +11,9 @@ services:
       interval: 30s
       timeout: 3s
       retries: 3
+    networks:
+      - fraud_net
+    restart: unless-stopped
 
   prometheus:
     image: prom/prometheus:v2.55.1
@@ -22,6 +25,8 @@ services:
       - "${PROMETHEUS_HOST_PORT:-9090}:9090"
     depends_on:
       - api
+    networks:
+      - fraud_net
     restart: unless-stopped
 
   mlflow:
@@ -34,6 +39,8 @@ services:
     command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/mlruns --host 0.0.0.0 --port 5000
     ports:
       - "${MLFLOW_HOST_PORT:-5000}:5000"
+    networks:
+      - fraud_net
     restart: unless-stopped
 
   grafana:
@@ -50,8 +57,14 @@ services:
       - "${GRAFANA_HOST_PORT:-3000}:3000"
     depends_on:
       - prometheus
+    networks:
+      - fraud_net
     restart: unless-stopped
 
 volumes:
   prometheus_data:
   grafana_data:
+
+networks:
+  fraud_net:
+    driver: bridge
