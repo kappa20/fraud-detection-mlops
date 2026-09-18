@@ -33,6 +33,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MLFLOW_DB = PROJECT_ROOT / "mlflow.db"
 ARTIFACTS_DIR = Path(__file__).resolve().parent / "artifacts"
 DBT_RUN_RESULTS = PROJECT_ROOT / "dbt_fraud" / "target" / "run_results.json"
+LATEST_RUN_MARKER = ARTIFACTS_DIR / "latest_training_run.json"
 
 EXPERIMENT_NAME = "fraud_detection"
 TRAINED_BY = "ML Engineer 1"
@@ -147,8 +148,16 @@ def main() -> None:
     )
 
     best_name = max(results, key=lambda k: results[k][1]["pr_auc"])
-    best_run_id = results[best_name][0]
+    best_run_id, best_metrics = results[best_name]
     print(f"\nMeilleur modèle (PR-AUC) : {best_name} -> run_id={best_run_id}")
+
+    # Marqueur du run "juste entraîné" (par opposition au meilleur run de
+    # tout l'historique de l'experiment) : consommé par ml/register_model.py
+    # pour que la porte de promotion compare le nouveau candidat au modèle
+    # actuellement en Production, plutôt que de re-sélectionner un vieux run.
+    LATEST_RUN_MARKER.write_text(
+        json.dumps({"run_id": best_run_id, "model_name": best_name, "pr_auc": best_metrics["pr_auc"]}, indent=2)
+    )
 
 
 if __name__ == "__main__":
