@@ -53,6 +53,42 @@ def test_data() -> None:
     _run("cd dbt_fraud && dbt test --profiles-dir .")
 
 
+@op(ins={"start": In(Nothing)})
+def train_model() -> None:
+    """Étape 5 (plateforme d'entraînement continu) : ré-entraînement sur le
+    dataset à jour (voir ml/train.py)."""
+    _run("python ml/train.py")
+
+
+@op(ins={"start": In(Nothing)})
+def check_drift() -> None:
+    """Étape 6 : rafraîchit monitoring/drift_report.md sur le dataset à jour."""
+    _run("python monitoring/drift_check.py")
+
+
+@op(ins={"start": In(Nothing)})
+def register_and_promote() -> None:
+    """Étape 7 : enregistrement MLflow + porte de promotion (voir
+    ml/register_model.py) — ne promeut en Production que si le nouveau
+    candidat fait mieux (PR-AUC) que le modèle actuellement déployé.
+    `--commit-artifacts` committe model.pkl/model_version.txt (si promu,
+    identité bot, jamais de push) et republie mlflow_snapshot/."""
+    _run("python ml/register_model.py --commit-artifacts")
+
+
 @job
 def fraud_pipeline_job():
     test_data(transform(validate(ingest())))
+
+
+@job
+def continuous_training_job():
+    """Pipeline complet déclenché par platform_api quand le seuil de mises
+    à jour en attente est atteint (voir platform_api/versioning.py, appelé
+    en amont pour versionner le dataset avant ce job) : ingestion ->
+    validation -> transformation -> tests -> entraînement -> dérive ->
+    enregistrement/promotion."""
+    after_tests = test_data(transform(validate(ingest())))
+    after_training = train_model(start=after_tests)
+    after_drift = check_drift(start=after_training)
+    register_and_promote(start=after_drift)
