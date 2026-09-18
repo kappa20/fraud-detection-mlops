@@ -31,6 +31,11 @@ orchestration_dagster/**/.dagster_home/
 monitoring/predictions_log.jsonl
 monitoring/*.html
 
+# Continuous training platform — runtime state (per-environment, not versioned)
+data/state/*.json
+data/state/*.jsonl
+!data/state/.gitkeep
+
 # Python
 __pycache__/
 *.pyc

@@ -83,6 +83,25 @@ services:
       - fraud_net
     restart: unless-stopped
 
+  platform-api:
+    build:
+      context: .
+      dockerfile: Dockerfile.platform
+    container_name: fraud-platform-api
+    volumes:
+      - .:/app
+    environment:
+      - PYTHONUNBUFFERED=1
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-admin12345}
+    ports:
+      - "4607:8000"
+    depends_on:
+      - minio
+    networks:
+      - fraud_net
+    restart: unless-stopped
+
 volumes:
   prometheus_data:
   grafana_data:

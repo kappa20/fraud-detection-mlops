@@ -1,0 +1,34 @@
+# Service d'ingestion continue (platform_api/) — contrairement à
+# Dockerfile (service de scoring, image légère), ce conteneur a besoin de
+# l'environnement complet (dvc, dagster, dbt, dlt...) et du dépôt git en
+# écriture : c'est lui qui fait grandir data/raw/creditcard.csv et
+# versionne les changements (dvc add/push, git commit local — voir
+# platform_api/versioning.py). Le dépôt est monté en volume (docker-compose.yml)
+# plutôt que copié à la construction, pour opérer sur le vrai clone git
+# géré par Komodo plutôt que sur un instantané figé de l'image.
+FROM python:3.11-slim
+
+RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+EXPOSE 8000
+
+HEALTHCHECK --interval=30s --timeout=3s CMD python -c "import urllib.request; urllib.request.urlopen('http://localhost:8000/health')" || exit 1
+
+# Au démarrage :
+# 1. `git config --global --add safe.directory` : git refuse par défaut
+#    d'opérer sur un dépôt bind-monté appartenant à un autre uid que celui
+#    du conteneur ("dubious ownership") — nécessaire ici puisque /app est
+#    le checkout du dépôt géré par Komodo sur l'hôte.
+# 2. Écrit .dvc/config.local avec les identifiants MinIO et l'endpoint
+#    *interne* au réseau docker (http://minio:9000, pas le port public) —
+#    c'est le seul moyen simple de fournir des identifiants à `dvc` sans
+#    dépendance supplémentaire. ATTENTION (documenté dans data/README.md) :
+#    comme /app est un bind mount du dépôt hôte, ceci écrase le
+#    .dvc/config.local personnel d'un développeur qui lancerait ce service
+#    en local — à régénérer depuis .dvc/config.local.example après coup si besoin.
+CMD ["sh", "-c", "git config --global --add safe.directory /app && mkdir -p .dvc && printf '[\"remote \\\"minio_shared\\\"\"]\\n    endpointurl = http://minio:9000\\n    access_key_id = %s\\n    secret_access_key = %s\\n' \"${MINIO_ROOT_USER:-admin}\" \"${MINIO_ROOT_PASSWORD:-admin12345}\" > .dvc/config.local && uvicorn platform_api.main:app --host 0.0.0.0 --port 8000"]
