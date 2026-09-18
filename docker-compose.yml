@@ -62,9 +62,31 @@ services:
       - fraud_net
     restart: unless-stopped
 
+  minio:
+    image: quay.io/minio/minio:RELEASE.2025-04-22T22-12-26Z
+    container_name: fraud-minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-admin12345}
+    volumes:
+      - minio_data:/data
+    ports:
+      - "4605:9000"
+      - "4606:9001"
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fraud_net
+    restart: unless-stopped
+
 volumes:
   prometheus_data:
   grafana_data:
+  minio_data:
 
 networks:
   fraud_net:

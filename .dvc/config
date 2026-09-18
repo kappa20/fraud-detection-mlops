@@ -1,0 +1,5 @@
+[core]
+    analytics = false
+    remote = minio_shared
+['remote "minio_shared"']
+    url = s3://dvc-store

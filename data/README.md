@@ -27,3 +27,13 @@ Le pipeline DataOps de ce projet (Phase B) a besoin du fichier `creditcard.csv`,
 
 - Ce fichier est exclu du suivi Git (`.gitignore`) — ne jamais forcer son ajout (`git add -f`).
 - La CI/CD ne dépend jamais de ce fichier réel : elle utilise une fixture synthétique versionnée (`../tests/fixtures/sample_transactions.csv`), générée par `../scripts/make_sample_fixture.py`.
+
+## Versioning avec DVC
+
+Le dataset est suivi par DVC (`data/raw/creditcard.csv.dvc`, commité dans git) plutôt que par le fichier lui-même. Chaque fois que le dataset grandit (nouvelles transactions bancaires ingérées ou simulation de dérive — voir plateforme d'entraînement continu), un nouveau `dvc add` + commit versionne le changement.
+
+**Récupérer le fichier réel** (au lieu de le télécharger sur Kaggle) :
+1. Copier `.dvc/config.local.example` vers `.dvc/config.local` et renseigner `endpointurl`/identifiants du remote MinIO (`minio_shared`) — voir les commentaires du fichier selon l'environnement (local, Komodo, conteneur interne).
+2. `dvc pull`
+
+**Remote** : bucket S3-compatible `dvc-store` sur un service MinIO (`docker-compose.yml`, service `minio`, ports `4605` API / `4606` console). Les identifiants ne sont jamais commités (`.dvc/config.local` est ignoré par git) — à partager entre membres de l'équipe par un canal privé.
