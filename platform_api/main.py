@@ -12,8 +12,10 @@ Usage local :
 """
 
 from datetime import datetime, timezone
+from pathlib import Path
 
 from fastapi import BackgroundTasks, FastAPI, HTTPException
+from fastapi.responses import HTMLResponse
 
 from platform_api import dataset, pipeline, simulate, state, versioning
 from platform_api.schemas import (
@@ -31,6 +33,13 @@ app = FastAPI(
     description="Ingestion des données bancaires, seuil de déclenchement, simulation de dérive.",
     version="0.1.0",
 )
+
+STATIC_DIR = Path(__file__).resolve().parent / "static"
+
+
+@app.get("/", response_class=HTMLResponse)
+def dashboard():
+    return (STATIC_DIR / "index.html").read_text()
 
 
 def _ingest_and_maybe_trigger(rows: list[dict], trigger: str, background_tasks: BackgroundTasks) -> IngestResponse:
@@ -72,6 +81,16 @@ def _ingest_and_maybe_trigger(rows: list[dict], trigger: str, background_tasks: 
                 note=str(exc),
             )
             state.append_run(run_record.model_dump())
+            # Ne pas remettre le compteur à zéro : le versioning a échoué,
+            # ces lignes n'ont pas été prises en compte — le prochain
+            # ingest doit retenter, pas repartir de zéro silencieusement.
+            state.save_state(current_state)
+            return IngestResponse(
+                rows_ingested=len(rows),
+                pending_count=current_state["pending_count"],
+                threshold=current_state["threshold"],
+                triggered=False,
+            )
         current_state["pending_count"] = 0
 
     state.save_state(current_state)

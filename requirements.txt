@@ -5,6 +5,7 @@
 # Versioning des données (dataset qui grandit au fil des ingestions
 # bancaires / simulations de dérive — voir docs/)
 dvc==3.67.1
+dvc-s3==3.3.0
 
 # Ingestion
 # 1.27.0 a été yanked par PyPI (bug de perte de données : le merge

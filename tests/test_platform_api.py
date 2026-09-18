@@ -38,6 +38,14 @@ def test_health():
         assert c.get("/health").json() == {"status": "ok"}
 
 
+def test_dashboard_served_at_root():
+    with TestClient(app) as c:
+        resp = c.get("/")
+        assert resp.status_code == 200
+        assert "text/html" in resp.headers["content-type"]
+        assert "Plateforme d'entraînement continu" in resp.text
+
+
 def test_ingest_below_threshold_does_not_trigger(client, monkeypatch):
     monkeypatch.setattr(state, "load_state", lambda: {"threshold": 10, "pending_count": 0})
     resp = client.post("/data/ingest", json={"transactions": [_valid_transaction()]})
@@ -89,7 +97,11 @@ def test_ingest_versioning_failure_is_recorded_but_not_fatal(client, monkeypatch
 
     resp = client.post("/data/ingest", json={"transactions": [_valid_transaction()]})
     assert resp.status_code == 200
-    assert resp.json()["triggered"] is False  # échec du versioning : pas "réussi"
+    body = resp.json()
+    assert body["triggered"] is False  # échec du versioning : pas "réussi"
+    # Le compteur ne doit pas être remis à zéro sur échec : ces lignes
+    # n'ont pas été versionnées, le prochain ingest doit retenter.
+    assert body["pending_count"] == 1
 
     runs = client.get("/runs").json()
     assert runs[0]["status"] == "failed"
