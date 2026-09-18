@@ -20,6 +20,7 @@ mlruns/
 mlflow.db
 ml/artifacts/*.pkl
 ml/artifacts/*.joblib
+ml/artifacts/latest_training_run.json
 !ml/artifacts/.gitkeep
 
 # Dagster

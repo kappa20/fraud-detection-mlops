@@ -4,11 +4,8 @@ Distinct de api/main.py (scoring temps réel) : ce service reçoit les
 nouvelles transactions de la banque (ou des transactions synthétiques
 générées pour la démo), fait grandir data/raw/creditcard.csv, et
 déclenche le versioning DVC + git une fois le seuil de mises à jour en
-attente atteint (voir platform_api/state.py et versioning.py).
-
-Le déclenchement du pipeline de ré-entraînement complet
-(orchestration_dagster/fraud_dagster/job.py étendu, promotion MLflow)
-n'est pas encore câblé ici — voir le TODO dans _ingest_and_maybe_trigger.
+attente atteint (voir platform_api/state.py et versioning.py), puis le
+pipeline complet de ré-entraînement en arrière-plan (voir pipeline.py).
 
 Usage local :
     uvicorn platform_api.main:app --reload --port 8000
@@ -16,9 +13,9 @@ Usage local :
 
 from datetime import datetime, timezone
 
-from fastapi import FastAPI, HTTPException
+from fastapi import BackgroundTasks, FastAPI, HTTPException
 
-from platform_api import dataset, simulate, state, versioning
+from platform_api import dataset, pipeline, simulate, state, versioning
 from platform_api.schemas import (
     IngestRequest,
     IngestResponse,
@@ -36,7 +33,7 @@ app = FastAPI(
 )
 
 
-def _ingest_and_maybe_trigger(rows: list[dict], trigger: str) -> IngestResponse:
+def _ingest_and_maybe_trigger(rows: list[dict], trigger: str, background_tasks: BackgroundTasks) -> IngestResponse:
     dataset.append_rows(rows)
 
     current_state = state.load_state()
@@ -54,11 +51,16 @@ def _ingest_and_maybe_trigger(rows: list[dict], trigger: str) -> IngestResponse:
                 rows_added=rows_added,
                 dvc_md5=result["md5"],
                 commit_sha=result["commit_sha"],
-                status="versioned",
-                # TODO (Day 2) : déclencher ici le job Dagster étendu
-                # (train -> drift_check -> register -> promotion MLflow)
-                # au lieu de se contenter de versionner le dataset.
-                note="Versioning DVC/git effectué ; déclenchement du ré-entraînement pas encore câblé.",
+                status="pipeline_running",
+                note="Dataset versionné (DVC/git) ; pipeline complet (entraînement, dérive, registry) en cours.",
+            )
+            state.append_run(run_record.model_dump())
+            background_tasks.add_task(
+                pipeline.run_continuous_training_job,
+                trigger=trigger,
+                rows_added=rows_added,
+                dvc_md5=result["md5"],
+                commit_sha=result["commit_sha"],
             )
             triggered = True
         except versioning.VersioningError as exc:
@@ -69,7 +71,7 @@ def _ingest_and_maybe_trigger(rows: list[dict], trigger: str) -> IngestResponse:
                 status="failed",
                 note=str(exc),
             )
-        state.append_run(run_record.model_dump())
+            state.append_run(run_record.model_dump())
         current_state["pending_count"] = 0
 
     state.save_state(current_state)
@@ -113,18 +115,18 @@ def set_threshold(update: ThresholdUpdate):
 
 
 @app.post("/data/ingest", response_model=IngestResponse)
-def ingest(request: IngestRequest):
+def ingest(request: IngestRequest, background_tasks: BackgroundTasks):
     rows = [t.model_dump() for t in request.transactions]
-    return _ingest_and_maybe_trigger(rows, trigger="ingest")
+    return _ingest_and_maybe_trigger(rows, trigger="ingest", background_tasks=background_tasks)
 
 
 @app.post("/data/simulate", response_model=IngestResponse)
-def simulate_data(request: SimulateRequest):
+def simulate_data(request: SimulateRequest, background_tasks: BackgroundTasks):
     try:
         rows = simulate.generate_synthetic_rows(request.n, request.drift_intensity)
     except FileNotFoundError as exc:
         raise HTTPException(status_code=503, detail=str(exc)) from exc
-    return _ingest_and_maybe_trigger(rows, trigger="simulate")
+    return _ingest_and_maybe_trigger(rows, trigger="simulate", background_tasks=background_tasks)
 
 
 @app.get("/runs", response_model=list[RunRecord])

@@ -81,7 +81,7 @@ class RunRecord(BaseModel):
     rows_added: int
     dvc_md5: str | None = None
     commit_sha: str | None = None
-    status: Literal["versioned", "failed"]
+    status: Literal["versioned", "pipeline_running", "completed", "failed"]
     note: str | None = None
 
 
