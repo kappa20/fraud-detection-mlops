@@ -70,7 +70,7 @@ services:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-admin12345}
     volumes:
-      - minio_data:/data
+      - minio_data_v2:/data
     ports:
       - "4605:9000"
       - "4606:9001"
@@ -86,7 +86,7 @@ services:
 volumes:
   prometheus_data:
   grafana_data:
-  minio_data:
+  minio_data_v2:
 
 networks:
   fraud_net:
