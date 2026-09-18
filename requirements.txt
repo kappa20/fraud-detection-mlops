@@ -2,6 +2,10 @@
 # (td/tp_chapitre_2/tp_chapitre2_pipeline/requirements.txt) pour limiter les
 # risques d'incompatibilité dlt / dbt-duckdb / dagster.
 
+# Versioning des données (dataset qui grandit au fil des ingestions
+# bancaires / simulations de dérive — voir docs/)
+dvc==3.67.1
+
 # Ingestion
 # 1.27.0 a été yanked par PyPI (bug de perte de données : le merge
 # incrémental tronque la table de destination) ; correction en 1.27.2

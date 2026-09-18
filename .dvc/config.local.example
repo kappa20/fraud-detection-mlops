@@ -1,0 +1,18 @@
+# Copy to .dvc/config.local (already gitignored — never commit real credentials)
+# and fill in the values for your environment.
+#
+# Local dev (MinIO started via `docker compose up -d minio`):
+#   endpointurl = http://localhost:4605
+#
+# From a teammate's machine against the Komodo deployment:
+#   endpointurl = http://exp.s3.fsbm.ma:4605
+#
+# From code running inside another container on the Komodo stack
+# (e.g. the future platform-api pipeline trigger), use the internal
+# docker network hostname instead — no need to go through the public port:
+#   endpointurl = http://minio:9000
+
+['remote "minio_shared"']
+    endpointurl = http://localhost:4605
+    access_key_id = admin
+    secret_access_key = admin12345
