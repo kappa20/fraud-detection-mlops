@@ -6,6 +6,16 @@
 # platform_api/versioning.py). Le dépôt est monté en volume (docker-compose.yml)
 # plutôt que copié à la construction, pour opérer sur le vrai clone git
 # géré par Komodo plutôt que sur un instantané figé de l'image.
+
+# --- Étape 1 : construction de l'interface React (platform_ui/) ---
+FROM node:20-slim AS ui-build
+WORKDIR /ui
+COPY platform_ui/package.json platform_ui/package-lock.json ./
+RUN npm ci --no-audit --no-fund
+COPY platform_ui/ ./
+RUN npm run build
+
+# --- Étape 2 : service FastAPI ---
 FROM python:3.11-slim
 
 RUN apt-get update && apt-get install -y --no-install-recommends git && rm -rf /var/lib/apt/lists/*
@@ -14,6 +24,11 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
+
+# L'interface est copiée hors de /app : docker-compose y monte le dépôt en
+# bind mount, ce qui masquerait tout ce qui aurait été copié dans /app.
+COPY --from=ui-build /ui/dist /opt/platform_ui_dist
+ENV PLATFORM_UI_DIST=/opt/platform_ui_dist
 
 COPY docker/platform-entrypoint.sh /usr/local/bin/platform-entrypoint.sh
 RUN chmod +x /usr/local/bin/platform-entrypoint.sh

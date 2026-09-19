@@ -7,14 +7,20 @@ Sans perturbation délibérée, des lignes ré-échantillonnées depuis le
 dataset de référence auraient une distribution quasi identique et le PSI
 resterait proche de 0 : la démonstration de dérive n'aurait aucun intérêt.
 `drift_intensity` contrôle donc l'ampleur de la perturbation appliquée.
+
+Deux points qui faussaient la démonstration :
+- l'échantillon de référence couvre tout le dataset d'origine (et pas ses
+  5000 premières lignes, toutes situées dans la première heure : la
+  distribution de hour_of_day aurait été fausse dès l'intensité "none") ;
+- les nouvelles transactions reçoivent un `time` postérieur à la fin du
+  dataset d'origine (comme de vraies transactions récentes), tout en
+  conservant l'heure de la journée de la ligne échantillonnée. Avant, elles
+  tombaient dans la fenêtre "référence" du calcul de dérive.
 """
 
 import numpy as np
-import pandas as pd
 
-from platform_api import dataset
-
-_REFERENCE_SAMPLE_SIZE = 5000
+from platform_api import dataset, transactions
 
 # Facteurs de perturbation par intensité de dérive choisie dans l'UI.
 _DRIFT_PARAMS = {
@@ -23,27 +29,29 @@ _DRIFT_PARAMS = {
     "strong": {"amount_scale": 3.5, "fraud_rate_multiplier": 8.0, "v_shift": 2.5},
 }
 
+_SECONDS_PER_DAY = 86400
+
 
 def generate_synthetic_rows(n: int, drift_intensity: str, rng: np.random.Generator | None = None) -> list[dict]:
     rng = rng if rng is not None else np.random.default_rng()
     params = _DRIFT_PARAMS[drift_intensity]
 
-    # Toujours échantillonner depuis les premières lignes du fichier
-    # (dataset Kaggle d'origine), pas depuis les lignes déjà ajoutées par
-    # la plateforme elle-même — sinon la "référence" dériverait avec le
-    # temps et fausserait la comparaison PSI.
-    reference = pd.read_csv(dataset.RAW_CSV_PATH, nrows=_REFERENCE_SAMPLE_SIZE)
+    # Toujours échantillonner dans le dataset d'origine (id < BASELINE_ROWS),
+    # pas dans les lignes déjà ajoutées par la plateforme elle-même — sinon la
+    # "référence" dériverait avec le temps et fausserait la comparaison PSI.
+    con = transactions._connection()
+    reference = con.execute("SELECT * FROM tx WHERE id < ?", [dataset.BASELINE_ROWS]).fetchdf()
     sample = reference.sample(n=n, replace=True, random_state=int(rng.integers(0, 2**31 - 1)))
 
-    max_time = float(reference["Time"].max())
-    base_fraud_rate = float(reference["Class"].mean())
+    base_fraud_rate = float(reference["is_fraud"].mean())
     target_fraud_rate = min(base_fraud_rate * params["fraud_rate_multiplier"], 0.5)
+    first_new_day = np.ceil(dataset.BASELINE_MAX_TIME / _SECONDS_PER_DAY) * _SECONDS_PER_DAY
 
     rows = []
     for _, base_row in sample.iterrows():
-        row = {f"v{i}": float(base_row[f"V{i}"]) + rng.normal(0, params["v_shift"]) for i in range(1, 29)}
-        row["time"] = max_time + float(rng.integers(1, 3600))
-        row["amount"] = max(0.0, float(base_row["Amount"]) * params["amount_scale"] * rng.uniform(0.7, 1.3))
+        row = {f"v{i}": float(base_row[f"v{i}"]) + rng.normal(0, params["v_shift"]) for i in range(1, 29)}
+        row["time"] = float(first_new_day + (float(base_row["time"]) % _SECONDS_PER_DAY))
+        row["amount"] = max(0.0, float(base_row["amount"]) * params["amount_scale"] * rng.uniform(0.7, 1.3))
         row["is_fraud"] = int(rng.random() < target_fraud_rate)
         rows.append(row)
     return rows

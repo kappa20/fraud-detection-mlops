@@ -23,6 +23,7 @@ Usage :
 
 import argparse
 import json
+import os
 import shutil
 from pathlib import Path
 
@@ -118,7 +119,47 @@ def commit_artifacts(version: int, promoted: bool) -> str:
     return _run_git(["git", "rev-parse", "HEAD"])
 
 
-def main(commit_artifacts_flag: bool = False) -> dict:
+def promote_version(client: MlflowClient, version: int | str, commit_artifacts_flag: bool = False) -> dict:
+    """Passe la version `version` en Production (archive l'ancienne), exporte
+    model.pkl/model_version.txt pour le service de scoring et, si demandé,
+    committe ces artefacts et republie l'instantané MLflow. Utilisé par la
+    porte de promotion automatique (`main`) et par l'approbation manuelle
+    depuis le tableau de bord (platform_api/models.py)."""
+    model_version = client.get_model_version(MODEL_NAME, str(version))
+    run_id = model_version.run_id
+    pr_auc = client.get_run(run_id).data.metrics.get("pr_auc")
+
+    client.transition_model_version_stage(
+        name=MODEL_NAME, version=str(version), stage="Production", archive_existing_versions=True
+    )
+    print(f"{MODEL_NAME} v{version} -> Production")
+
+    # Export local pour api/model_loader.py (Livrable 7).
+    ARTIFACTS_DIR.mkdir(exist_ok=True)
+    download_path = ARTIFACTS_DIR / "_download"
+    if download_path.exists():
+        shutil.rmtree(download_path)
+    model_uri = f"runs:/{run_id}/model"
+    mlflow.artifacts.download_artifacts(artifact_uri=model_uri, dst_path=str(download_path))
+
+    model = mlflow.sklearn.load_model(str(download_path / "model"))
+    joblib.dump(model, ARTIFACTS_DIR / "model.pkl")
+    shutil.rmtree(download_path)
+    print(f"Modèle exporté : {ARTIFACTS_DIR / 'model.pkl'}")
+
+    pr_auc_text = f"{pr_auc:.4f}" if pr_auc is not None else "n/a"
+    (ARTIFACTS_DIR / "model_version.txt").write_text(
+        f"{MODEL_NAME} v{version} (run_id={run_id}, pr_auc={pr_auc_text}, stage=Production)\n"
+    )
+
+    commit_sha = None
+    if commit_artifacts_flag:
+        commit_sha = commit_artifacts(int(version), promoted=True)
+        publish_mlflow_snapshot()
+    return {"version": int(version), "run_id": run_id, "pr_auc": pr_auc, "commit_sha": commit_sha}
+
+
+def main(commit_artifacts_flag: bool = False, no_promote: bool = False) -> dict:
     mlflow.set_tracking_uri(f"sqlite:///{MLFLOW_DB}")
     client = MlflowClient()
 
@@ -154,38 +195,21 @@ def main(commit_artifacts_flag: bool = False) -> dict:
         "commit_sha": None,
     }
 
+    if no_promote:
+        print(f"{MODEL_NAME} v{version} reste en Staging (promotion manuelle : approbation requise).")
+        if commit_artifacts_flag:
+            publish_mlflow_snapshot()
+        return result
+
     if not promote:
         print(f"{MODEL_NAME} v{version} reste en Staging (porte de promotion non franchie).")
         if commit_artifacts_flag:
             publish_mlflow_snapshot()
         return result
 
-    client.transition_model_version_stage(
-        name=MODEL_NAME, version=version, stage="Production", archive_existing_versions=True
-    )
-    print(f"{MODEL_NAME} v{version} -> Production")
+    promoted = promote_version(client, version, commit_artifacts_flag)
     result["promoted"] = True
-
-    # Export local pour api/model_loader.py (Livrable 7).
-    ARTIFACTS_DIR.mkdir(exist_ok=True)
-    download_path = ARTIFACTS_DIR / "_download"
-    if download_path.exists():
-        shutil.rmtree(download_path)
-    mlflow.artifacts.download_artifacts(artifact_uri=model_uri, dst_path=str(download_path))
-
-    model = mlflow.sklearn.load_model(str(download_path / "model"))
-    joblib.dump(model, ARTIFACTS_DIR / "model.pkl")
-    shutil.rmtree(download_path)
-    print(f"Modèle exporté : {ARTIFACTS_DIR / 'model.pkl'}")
-
-    (ARTIFACTS_DIR / "model_version.txt").write_text(
-        f"{MODEL_NAME} v{version} (run_id={run_id}, pr_auc={pr_auc:.4f}, stage=Production)\n"
-    )
-
-    if commit_artifacts_flag:
-        result["commit_sha"] = commit_artifacts(version, promoted=True)
-        publish_mlflow_snapshot()
-
+    result["commit_sha"] = promoted["commit_sha"]
     return result
 
 
@@ -197,5 +221,13 @@ if __name__ == "__main__":
         help="Committer model.pkl/model_version.txt (si promu) et republier mlflow_snapshot/ — "
         "réservé à l'usage automatisé par la plateforme d'entraînement continu.",
     )
+    parser.add_argument(
+        "--no-promote",
+        action="store_true",
+        default=os.environ.get("FRAUD_REGISTER_NO_PROMOTE") == "1",
+        help="Enregistrer le candidat en Staging sans le promouvoir : la promotion est décidée par un "
+        "humain dans le tableau de bord (équivalent : variable FRAUD_REGISTER_NO_PROMOTE=1, posée par "
+        "la plateforme quand la promotion automatique est désactivée).",
+    )
     args = parser.parse_args()
-    main(commit_artifacts_flag=args.commit_artifacts)
+    main(commit_artifacts_flag=args.commit_artifacts, no_promote=args.no_promote)

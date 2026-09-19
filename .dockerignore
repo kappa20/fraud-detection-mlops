@@ -16,3 +16,5 @@ venv/
 tests/
 docs/
 PROJETS.pdf
+platform_ui/node_modules/
+platform_ui/dist/
