@@ -5,6 +5,11 @@ services:
     container_name: fraud-api
     ports:
       - "4601:8000"
+    volumes:
+      # Le modèle exporté par la plateforme (ml/register_model.py::promote_version)
+      # est lu au démarrage par api/model_loader.py : un simple redémarrage du
+      # conteneur suffit à servir un nouveau modèle, sans rebuild ni git push.
+      - ./ml/artifacts:/app/ml/artifacts:ro
     environment:
       - PYTHONUNBUFFERED=1
     healthcheck:
@@ -94,6 +99,16 @@ services:
       - PYTHONUNBUFFERED=1
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
       - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-admin12345}
+      # Connexion au tableau de bord : "utilisateur:mot_de_passe,autre:mot_de_passe".
+      # Valeurs par défaut de démo — À SURCHARGER dans l'Environment de la stack Komodo.
+      - PLATFORM_USERS=${PLATFORM_USERS:-admin:changeme}
+      - PLATFORM_SECRET=${PLATFORM_SECRET:-}
+      # Redémarrage de fraud-api après approbation d'un modèle (voir platform_api/deploy.py) ;
+      # laisser vide pour désactiver (la promotion MLflow a lieu, le redéploiement est "skipped").
+      - KOMODO_URL=${KOMODO_URL:-}
+      - KOMODO_API_KEY=${KOMODO_API_KEY:-}
+      - KOMODO_API_SECRET=${KOMODO_API_SECRET:-}
+      - KOMODO_STACK=${KOMODO_STACK:-}
     ports:
       - "4607:8000"
     depends_on:
