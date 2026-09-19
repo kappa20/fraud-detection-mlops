@@ -38,7 +38,11 @@ def _describe(client: MlflowClient, model_version) -> dict:
 
 
 def _latest(client: MlflowClient, stage: str):
-    versions = client.get_latest_versions(register_model.MODEL_NAME, stages=[stage])
+    try:
+        versions = client.get_latest_versions(register_model.MODEL_NAME, stages=[stage])
+    except mlflow.exceptions.MlflowException:
+        # Registry neuf (aucun modèle enregistré) : pas une panne, simplement rien à comparer.
+        return None
     return versions[0] if versions else None
 
 

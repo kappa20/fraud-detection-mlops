@@ -559,6 +559,17 @@ def test_models_comparison_shows_candidate_vs_production(client, monkeypatch):
     assert body["delta"]["pr_auc"] == pytest.approx(0.02)
 
 
+def test_models_comparison_with_an_empty_registry(client, monkeypatch):
+    class _EmptyRegistry(_FakeClient):
+        def get_latest_versions(self, name, stages):
+            raise models.mlflow.exceptions.MlflowException("Registered Model with name=x not found")
+
+    monkeypatch.setattr(models, "_client", lambda: _EmptyRegistry())
+    resp = client.get("/models/comparison")
+    assert resp.status_code == 200
+    assert resp.json() == {"candidate": None, "production": None, "delta": {}}
+
+
 def test_models_approve_promotes_then_requests_redeploy(client, monkeypatch):
     fake = _FakeClient()
     monkeypatch.setattr(models, "_client", lambda: fake)
