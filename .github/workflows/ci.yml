@@ -5,6 +5,11 @@ name: ML Pipeline CI
 # la validation complète du pipeline. Un pipeline qui ne passe pas les
 # tests ne peut pas être mergé."
 #
+# Déploiement continu gardé : le job `deploy` ne tourne que si `test` est vert,
+# uniquement sur un push vers main (jamais sur une pull request). Il remplace le
+# webhook GitHub -> Komodo, qui déployait même quand la CI échouait — ce webhook
+# doit être supprimé (voir docs/03_installation.md, "Déploiement continu").
+#
 # La CI ne dépend jamais du vrai dataset Kaggle (non versionné, voir
 # data/README.md) : elle exerce le pipeline complet (ingestion -> qualité
 # -> transformation -> ML -> API conteneurisée) sur une fixture
@@ -61,3 +66,48 @@ jobs:
 
       - name: Build de l'image Docker du service
         run: docker build -t fraud-api:ci .
+
+      - name: Définitions Dagster (jobs, schedule, sensor) chargeables
+        run: |
+          python - <<'PY'
+          from orchestration_dagster.fraud_dagster.job import defs
+          jobs = {j.name for j in defs.jobs}
+          assert jobs == {"fraud_pipeline_job", "continuous_training_job"}, jobs
+          assert [s.name for s in defs.schedules] == ["nightly_pipeline_schedule"]
+          assert [s.name for s in defs.sensors] == ["dataset_version_sensor"]
+          print("Dagster OK :", sorted(jobs))
+          PY
+
+      - name: Règles Prometheus (syntaxe + tests unitaires des alertes)
+        run: |
+          docker run --rm --entrypoint promtool -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.55.1 check config /etc/prometheus/prometheus.yml
+          docker run --rm --entrypoint promtool -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+            prom/prometheus:v2.55.1 test rules /etc/prometheus/alerts_test.yml
+
+      - name: Build de l'image du serveur MLflow
+        run: docker build -f Dockerfile.mlflow -t fraud-mlflow:ci .
+
+  deploy:
+    name: Déploiement Komodo (si les tests passent)
+    needs: test
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    # Un seul déploiement à la fois ; un push plus récent attend la fin du courant.
+    concurrency:
+      group: komodo-deploy
+      cancel-in-progress: false
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Redéployer la stack via l'API Komodo
+        run: python scripts/komodo_deploy.py
+        env:
+          KOMODO_URL: ${{ secrets.KOMODO_URL }}
+          KOMODO_API_KEY: ${{ secrets.KOMODO_API_KEY }}
+          KOMODO_API_SECRET: ${{ secrets.KOMODO_API_SECRET }}
+          KOMODO_STACK: ${{ secrets.KOMODO_STACK }}
+          # Variable (Settings > Variables), ex. http://exp.s3.fsbm.ma:4607/health
+          DEPLOY_HEALTH_URL: ${{ vars.DEPLOY_HEALTH_URL }}
