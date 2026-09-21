@@ -26,6 +26,7 @@ import json
 import os
 import shutil
 from pathlib import Path
+from urllib.parse import urlparse
 
 import joblib
 import mlflow
@@ -56,7 +57,12 @@ def tracking_uri() -> str:
 
 
 def is_remote_tracking() -> bool:
-    return bool(os.environ.get(TRACKING_URI_ENV))
+    """Vrai si le tracking passe par un serveur MLflow (http/https).
+
+    On juge l'URI, pas la simple présence de la variable : depuis mlflow 2.2x,
+    `mlflow.set_tracking_uri()` recopie l'URI dans MLFLOW_TRACKING_URI, y compris
+    pour un SQLite local — la variable est alors définie sans qu'il y ait de serveur."""
+    return urlparse(tracking_uri()).scheme in ("http", "https")
 
 
 def get_best_run(client: MlflowClient, experiment_name: str, metric: str = "pr_auc"):

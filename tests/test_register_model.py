@@ -88,6 +88,17 @@ def test_tracking_uri_defaults_to_local_sqlite_and_honours_env(monkeypatch, tmp_
     assert register_model.is_remote_tracking() is True
 
 
+def test_sqlite_uri_in_env_is_not_a_live_server(monkeypatch, tmp_path):
+    # mlflow >= 2.2x recopie set_tracking_uri() dans MLFLOW_TRACKING_URI : même en
+    # mode local la variable est définie, et le snapshot doit quand même être publié.
+    monkeypatch.setenv(register_model.TRACKING_URI_ENV, f"sqlite:///{tmp_path / 'mlflow.db'}")
+    assert register_model.is_remote_tracking() is False
+
+    register_model.MLRUNS_DIR.mkdir()
+    register_model.publish_mlflow_snapshot()
+    assert (tmp_path / "mlflow_snapshot" / "mlflow.db").exists()
+
+
 def test_snapshot_is_skipped_with_a_live_mlflow_server(monkeypatch, tmp_path):
     monkeypatch.setenv(register_model.TRACKING_URI_ENV, "http://mlflow:5000")
     register_model.publish_mlflow_snapshot()
