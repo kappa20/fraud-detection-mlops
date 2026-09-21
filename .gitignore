@@ -35,6 +35,7 @@ monitoring/*.html
 # Continuous training platform — runtime state (per-environment, not versioned)
 data/state/*.json
 data/state/*.jsonl
+data/state/*.lock
 !data/state/.gitkeep
 
 # Python

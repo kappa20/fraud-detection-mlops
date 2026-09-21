@@ -1,0 +1,15 @@
+# Configuration de l'instance Dagster (DAGSTER_HOME=/dagster_home dans
+# docker-compose.yml, volume partagé entre les services `dagster` et
+# `platform-api` : les runs lancés depuis le tableau de bord apparaissent donc
+# aussi dans l'UI Dagster). Copiée dans DAGSTER_HOME par les entrypoints.
+#
+# Un seul run à la fois pour les runs mis en file par le démon (schedule,
+# sensor, bouton "Launchpad") : ils écrivent tous le même DuckDB et les mêmes
+# artefacts MLflow. Les runs de platform-api (`dagster job execute`) contournent
+# cette file — d'où le verrou de fichier dans fraud_dagster/job.py.
+concurrency:
+  runs:
+    max_concurrent_runs: 1
+
+telemetry:
+  enabled: false

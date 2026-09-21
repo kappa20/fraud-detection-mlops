@@ -8,9 +8,17 @@
 #    un bind mount du dépôt hôte, ceci écrase le .dvc/config.local
 #    personnel d'un développeur qui lancerait ce service en local ; à
 #    régénérer depuis .dvc/config.local.example après coup si besoin.
+# 3. Rejoint l'instance Dagster partagée avec le service `dagster` (volume
+#    dagster_home) : les runs lancés depuis le tableau de bord (`dagster job
+#    execute`, voir platform_api/jobs.py) apparaissent dans l'UI Dagster.
 set -e
 
 git config --global --add safe.directory /app
+
+if [ -n "$DAGSTER_HOME" ]; then
+  mkdir -p "$DAGSTER_HOME"
+  cp /app/orchestration_dagster/dagster.yaml "$DAGSTER_HOME/dagster.yaml"
+fi
 
 mkdir -p .dvc
 cat > .dvc/config.local <<EOF
