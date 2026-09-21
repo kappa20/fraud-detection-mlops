@@ -15,6 +15,13 @@ Variables d'environnement (secrets GitHub Actions) :
 Si l'une des quatre premières manque, le déploiement est ignoré (avertissement,
 code 0) : forks, dépôt pas encore configuré.
 
+Échecs transitoires : `vh3` est un serveur partagé dont l'accès aux registres
+d'images (quay.io, Docker Hub) expire parfois ("TLS handshake timeout" pendant
+`Compose Pull`). Komodo interrompt alors le déploiement *avant* de remplacer
+un conteneur — l'ancienne version continue de tourner — et rejouer suffit. Ces
+erreurs réseau sont donc retentées (3 essais espacés d'une minute) ; toute autre
+erreur (build cassé, port déjà utilisé...) échoue immédiatement.
+
 API Komodo (v2.x) : POST /execute {"type": "DeployStack", ...} renvoie un
 `Update` ; POST /read {"type": "GetUpdate", ...} permet de suivre son statut
 (Queued -> InProgress -> Complete, avec `success`). Même convention que
@@ -29,6 +36,22 @@ import urllib.error
 import urllib.request
 
 REQUIRED_ENV = ("KOMODO_URL", "KOMODO_API_KEY", "KOMODO_API_SECRET", "KOMODO_STACK")
+
+TRANSIENT_MARKERS = (
+    "tls handshake timeout",
+    "i/o timeout",
+    "connection reset by peer",
+    "temporary failure in name resolution",
+    "context deadline exceeded",
+    "unexpected eof",
+    "toomanyrequests",
+    "502 bad gateway",
+    "503 service unavailable",
+)
+
+
+class TransientDeployError(RuntimeError):
+    """Échec dû à un incident réseau côté serveur : rejouer le déploiement est sans risque."""
 
 
 def _call(base_url: str, path: str, body: dict, key: str, secret: str, timeout: float = 30.0) -> dict:
@@ -70,8 +93,22 @@ def deploy_stack(env: dict, timeout_s: float = 1200.0, poll_s: float = 10.0) -> 
         update = _call(base, "/read", {"type": "GetUpdate", "params": {"id": update_id}}, key, secret)
 
     if not update.get("success"):
-        raise RuntimeError("Le déploiement Komodo a échoué :\n" + _failure_details(update))
+        details = _failure_details(update)
+        error = TransientDeployError if any(m in details.lower() for m in TRANSIENT_MARKERS) else RuntimeError
+        raise error("Le déploiement Komodo a échoué :\n" + details)
     print("Déploiement Komodo terminé avec succès.")
+
+
+def deploy_with_retries(env: dict, attempts: int = 3, wait_s: float = 60.0) -> None:
+    for attempt in range(1, attempts + 1):
+        try:
+            deploy_stack(env)
+            return
+        except TransientDeployError as exc:
+            if attempt == attempts:
+                raise
+            print(f"Incident réseau transitoire (essai {attempt}/{attempts}), nouvel essai dans {wait_s:.0f} s :\n{exc}")
+            time.sleep(wait_s)
 
 
 def wait_healthy(url: str, timeout_s: float = 300.0, poll_s: float = 10.0) -> None:
@@ -97,7 +134,7 @@ def main(env: dict | None = None) -> int:
         print(f"::warning::Variables absentes ({', '.join(missing)}) : déploiement Komodo ignoré.")
         return 0
     try:
-        deploy_stack(env)
+        deploy_with_retries(env)
         if env.get("DEPLOY_HEALTH_URL"):
             wait_healthy(env["DEPLOY_HEALTH_URL"])
     except (RuntimeError, urllib.error.URLError, TimeoutError) as exc:

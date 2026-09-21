@@ -85,3 +85,34 @@ def test_health_url_is_polled_after_deploy(monkeypatch):
     monkeypatch.setattr(komodo_deploy, "wait_healthy", probed.append)
     assert komodo_deploy.main({**ENV, "DEPLOY_HEALTH_URL": "http://exp.example:4607/health"}) == 0
     assert probed == ["http://exp.example:4607/health"]
+
+
+TLS_FAILURE = {
+    "_id": {"$oid": "abc"},
+    "status": "Complete",
+    "success": False,
+    "logs": [{"stage": "Compose Pull", "success": False, "stderr": 'Head "https://quay.io/v2/...": net/http: TLS handshake timeout'}],
+}
+OK = {"_id": {"$oid": "abc"}, "status": "Complete", "success": True}
+
+
+def test_transient_network_failure_is_retried_then_succeeds(monkeypatch, capsys):
+    calls = _fake_api(monkeypatch, [TLS_FAILURE, OK])
+    assert komodo_deploy.main(ENV) == 0
+    assert [c[0] for c in calls] == ["/execute", "/execute"]  # un DeployStack par essai
+    assert "transitoire" in capsys.readouterr().out
+
+
+def test_transient_failure_gives_up_after_three_attempts(monkeypatch):
+    calls = _fake_api(monkeypatch, [TLS_FAILURE] * 3)
+    assert komodo_deploy.main(ENV) == 1
+    assert len(calls) == 3
+
+
+def test_real_failure_is_not_retried(monkeypatch):
+    calls = _fake_api(
+        monkeypatch,
+        [{**TLS_FAILURE, "logs": [{"stage": "Compose Up", "success": False, "stderr": "port is already allocated"}]}, OK],
+    )
+    assert komodo_deploy.main(ENV) == 1
+    assert len(calls) == 1
