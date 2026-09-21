@@ -4,9 +4,10 @@ import { ErrorNote, Panel } from "../components/ui";
 import type { ServiceHealth } from "../types";
 
 const DESCRIPTIONS: Record<string, string> = {
-  mlflow: "Suivi des expériences et Model Registry",
-  grafana: "Tableaux de bord de supervision de l'API",
-  prometheus: "Métriques du service de scoring",
+  mlflow: "Suivi des expériences et Model Registry (PostgreSQL + MinIO)",
+  grafana: "Tableaux de bord : API de scoring, dérive et pipeline",
+  prometheus: "Métriques du scoring et de la dérive, règles d'alerte",
+  dagster: "UI d'orchestration : graphe des jobs, runs, schedule nocturne, sensor",
   scoring: "Documentation Swagger de l'API de scoring",
   minio: "Stockage objet du remote DVC",
 };
@@ -59,7 +60,7 @@ export default function EcosystemPage() {
           <div className="mono dim">/docs</div>
         </a>
         {health.isLoading &&
-          ["MLflow Registry", "Grafana", "Prometheus", "API de scoring"].map((label) => (
+          ["MLflow Registry", "Grafana", "Prometheus", "API de scoring", "Dagster"].map((label) => (
             <div className="eco-card" key={label}>
               <h3>
                 <Dot state="loading" />

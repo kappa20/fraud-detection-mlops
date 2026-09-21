@@ -1,5 +1,5 @@
 """Vérification de l'état des services de l'écosystème (MLflow, Grafana,
-Prometheus, API de scoring, MinIO).
+Prometheus, API de scoring, Dagster, MinIO).
 
 Les pings partent du *serveur* : depuis le navigateur ils seraient bloqués
 par CORS, ou par le contenu mixte (interface en https, services en http).
@@ -20,6 +20,7 @@ SERVICES = {
     "grafana": ("Grafana", "http://grafana:3000/api/health", "http://exp.s3.fsbm.ma:4603/?orgId=1"),
     "prometheus": ("Prometheus", "http://prometheus:9090/-/healthy", "http://exp.s3.fsbm.ma:4604/graph"),
     "scoring": ("API de scoring (Swagger)", "http://api:8000/health", "http://exp.s3.fsbm.ma:4601/docs"),
+    "dagster": ("Dagster (orchestration)", "http://dagster:3000/server_info", "http://exp.s3.fsbm.ma:4608"),
     "minio": ("MinIO (stockage DVC)", "http://minio:9000/minio/health/live", "http://exp.s3.fsbm.ma:4606"),
 }
 

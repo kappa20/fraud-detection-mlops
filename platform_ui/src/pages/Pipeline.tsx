@@ -201,7 +201,11 @@ export default function PipelinePage() {
             </div>
             <p className="dim" style={{ fontSize: 12.5 }}>
               <strong>Pipeline complet</strong> : ingestion → validation → transformation → tests (Dagster). <strong>Ré-entraînement</strong> : pipeline complet
-              puis entraînement, contrôle de dérive et enregistrement du candidat dans le registry.
+              puis entraînement, contrôle de dérive et enregistrement du candidat dans le registry.{" "}
+              <a href="http://exp.s3.fsbm.ma:4608" target="_blank" rel="noreferrer">
+                Ouvrir l'UI Dagster
+              </a>{" "}
+              pour suivre les runs, le schedule nocturne et le sensor.
             </p>
           </div>
         </div>
