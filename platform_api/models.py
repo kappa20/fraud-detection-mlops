@@ -22,7 +22,7 @@ class NoCandidateError(RuntimeError):
 
 
 def _client() -> MlflowClient:
-    mlflow.set_tracking_uri(f"sqlite:///{register_model.MLFLOW_DB}")
+    mlflow.set_tracking_uri(register_model.tracking_uri())
     return MlflowClient()
 
 

@@ -20,6 +20,7 @@ MODEL_NAME = register_model.MODEL_NAME
 
 @pytest.fixture(autouse=True)
 def isolated_mlflow(tmp_path, monkeypatch):
+    monkeypatch.delenv(register_model.TRACKING_URI_ENV, raising=False)  # jamais le vrai serveur MLflow
     monkeypatch.setattr(register_model, "MLFLOW_DB", tmp_path / "mlflow.db")
     monkeypatch.setattr(register_model, "ARTIFACTS_DIR", tmp_path / "artifacts")
     monkeypatch.setattr(register_model, "LATEST_RUN_MARKER", tmp_path / "artifacts" / "latest_training_run.json")
@@ -76,3 +77,18 @@ def test_better_candidate_is_promoted_and_exported():
     assert (register_model.ARTIFACTS_DIR / "model.pkl").exists()
     version_text = (register_model.ARTIFACTS_DIR / "model_version.txt").read_text()
     assert "Production" in version_text
+
+
+def test_tracking_uri_defaults_to_local_sqlite_and_honours_env(monkeypatch, tmp_path):
+    assert register_model.tracking_uri() == f"sqlite:///{tmp_path / 'mlflow.db'}"
+    assert register_model.is_remote_tracking() is False
+
+    monkeypatch.setenv(register_model.TRACKING_URI_ENV, "http://mlflow:5000")
+    assert register_model.tracking_uri() == "http://mlflow:5000"
+    assert register_model.is_remote_tracking() is True
+
+
+def test_snapshot_is_skipped_with_a_live_mlflow_server(monkeypatch, tmp_path):
+    monkeypatch.setenv(register_model.TRACKING_URI_ENV, "http://mlflow:5000")
+    register_model.publish_mlflow_snapshot()
+    assert not (tmp_path / "mlflow_snapshot").exists()

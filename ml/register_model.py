@@ -41,8 +41,22 @@ LATEST_RUN_MARKER = ARTIFACTS_DIR / "latest_training_run.json"
 MODEL_NAME = "fraud-detection-classifier"
 EXPERIMENT_NAME = "fraud_detection"
 
+# Mode "serveur" : MLFLOW_TRACKING_URI pointe vers le serveur MLflow vivant de la
+# stack (ex. http://mlflow:5000, backend PostgreSQL + artefacts MinIO — voir
+# docker-compose.yml). Sans elle : mode local historique (SQLite + ./mlruns).
+TRACKING_URI_ENV = "MLFLOW_TRACKING_URI"
+
 BOT_NAME = "Fraud Pipeline Bot"
 BOT_EMAIL = "pipeline@fraud-detection-mlops.local"
+
+
+def tracking_uri() -> str:
+    """URI de tracking à utiliser (évaluée à l'appel : testable, surchargeable)."""
+    return os.environ.get(TRACKING_URI_ENV) or f"sqlite:///{MLFLOW_DB}"
+
+
+def is_remote_tracking() -> bool:
+    return bool(os.environ.get(TRACKING_URI_ENV))
 
 
 def get_best_run(client: MlflowClient, experiment_name: str, metric: str = "pr_auc"):
@@ -103,7 +117,12 @@ def publish_mlflow_snapshot() -> None:
     seule par le conteneur mlflow de docker-compose.yml sur Komodo — sans
     cette étape, le MLflow déployé resterait figé sur l'instantané pris
     manuellement au moment du déploiement initial, et les ré-entraînements
-    de la plateforme n'y apparaîtraient jamais."""
+    de la plateforme n'y apparaîtraient jamais.
+
+    Inutile (donc ignoré) avec un serveur MLflow vivant : le registry y est
+    déjà à jour, sans passer par git."""
+    if is_remote_tracking():
+        return
     MLFLOW_SNAPSHOT_DIR.mkdir(exist_ok=True)
     shutil.copy2(MLFLOW_DB, MLFLOW_SNAPSHOT_DIR / "mlflow.db")
     snapshot_mlruns = MLFLOW_SNAPSHOT_DIR / "mlruns"
@@ -160,7 +179,7 @@ def promote_version(client: MlflowClient, version: int | str, commit_artifacts_f
 
 
 def main(commit_artifacts_flag: bool = False, no_promote: bool = False) -> dict:
-    mlflow.set_tracking_uri(f"sqlite:///{MLFLOW_DB}")
+    mlflow.set_tracking_uri(tracking_uri())
     client = MlflowClient()
 
     candidate = get_candidate_run(client)
