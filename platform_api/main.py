@@ -21,9 +21,22 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from fastapi import APIRouter, BackgroundTasks, Depends, FastAPI, HTTPException, Query
-from fastapi.responses import FileResponse, HTMLResponse, StreamingResponse
+from fastapi.responses import FileResponse, HTMLResponse, Response, StreamingResponse
 
-from platform_api import auth, dataset, deploy, drift, jobs, models, services, simulate, state, transactions, versioning
+from platform_api import (
+    auth,
+    dataset,
+    deploy,
+    drift,
+    jobs,
+    metrics,
+    models,
+    services,
+    simulate,
+    state,
+    transactions,
+    versioning,
+)
 from platform_api.schemas import (
     ChangeBatch,
     ChangeResult,
@@ -79,6 +92,12 @@ def _now() -> str:
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/metrics", include_in_schema=False)
+def prometheus_metrics():
+    """Dérive (PSI), dataset, dernier run — scrapé par Prometheus (metrics.py)."""
+    return Response(content=metrics.render(), media_type=metrics.CONTENT_TYPE)
 
 
 @app.post("/auth/login", response_model=LoginResponse)

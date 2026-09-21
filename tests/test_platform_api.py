@@ -607,3 +607,48 @@ def test_services_health_reports_up_and_down(client, monkeypatch):
     body = {s["key"]: s for s in client.get("/services/health").json()}
     assert body["mlflow"]["up"] is True and body["mlflow"]["latency_ms"] == 12
     assert body["grafana"]["up"] is False
+
+
+# ---------------------------------------------------------------- /metrics (Prometheus)
+
+
+def _metric_values(text: str) -> dict[str, float]:
+    return {
+        line.rsplit(" ", 1)[0]: float(line.rsplit(" ", 1)[1])
+        for line in text.splitlines()
+        if line and not line.startswith("#")
+    }
+
+
+def test_metrics_endpoint_is_public_and_exposes_drift_and_dataset(client):
+    response = TestClient(app).get("/metrics")  # sans jeton : Prometheus ne s'authentifie pas
+    assert response.status_code == 200
+    assert response.headers["content-type"].startswith("text/plain")
+
+    values = _metric_values(response.text)
+    assert values["fraud_dataset_rows"] == 40
+    assert values["fraud_drift_available"] == 1
+    assert values["fraud_drift_threshold"] == 0.25
+    assert values["fraud_drift_alert"] in (0, 1)
+    assert 'fraud_drift_psi{feature="amount"}' in values
+    assert values["fraud_drift_max_psi"] == max(v for k, v in values.items() if k.startswith("fraud_drift_psi{"))
+
+
+def test_metrics_reports_last_finished_pipeline_run(client):
+    assert "fraud_pipeline_last_run_success" not in TestClient(app).get("/metrics").text  # aucun run encore
+
+    base = {"trigger": "manual", "rows_added": 0, "commit_sha": None, "note": None, "job_kind": "pipeline"}
+    state.append_run({**base, "run_id": "a", "timestamp": "2026-01-01T00:00:00+00:00", "status": "completed"})
+    state.append_run({**base, "run_id": "b", "timestamp": "2026-01-02T00:00:00+00:00", "status": "failed"})
+    state.append_run({**base, "run_id": "c", "timestamp": "2026-01-03T00:00:00+00:00", "status": "running"})
+
+    values = _metric_values(TestClient(app).get("/metrics").text)
+    assert values["fraud_pipeline_last_run_success"] == 0  # 'b' : dernier run *terminé*
+    assert values["fraud_pipeline_last_run_timestamp_seconds"] == 1767312000.0
+
+
+def test_metrics_survives_missing_dataset(client, monkeypatch, tmp_path):
+    monkeypatch.setattr(dataset, "RAW_CSV_PATH", tmp_path / "absent.csv")
+    values = _metric_values(TestClient(app).get("/metrics").text)
+    assert values["fraud_drift_available"] == 0
+    assert "fraud_drift_max_psi" not in values
