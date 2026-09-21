@@ -13,9 +13,14 @@ responsable / quelle validation) :
 Usage :
     python ml/train.py
     mlflow ui --backend-store-uri sqlite:///mlflow.db   # pour consulter les runs
+
+Avec la variable MLFLOW_TRACKING_URI (ex. http://mlflow:5000 dans la stack
+docker-compose), les runs sont écrits sur le serveur MLflow vivant
+(PostgreSQL + artefacts MinIO) au lieu de ./mlflow.db.
 """
 
 import json
+import os
 import subprocess
 from pathlib import Path
 
@@ -102,7 +107,7 @@ def train_and_log(name, estimator, params, X_train, X_test, y_train, y_test, tag
 
 
 def main() -> None:
-    mlflow.set_tracking_uri(f"sqlite:///{MLFLOW_DB}")
+    mlflow.set_tracking_uri(os.environ.get("MLFLOW_TRACKING_URI") or f"sqlite:///{MLFLOW_DB}")
     mlflow.set_experiment(EXPERIMENT_NAME)
 
     X_train, X_test, y_train, y_test = get_train_test_data()
