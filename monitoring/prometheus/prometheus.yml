@@ -2,8 +2,21 @@ global:
   scrape_interval: 15s
   evaluation_interval: 15s
 
+rule_files:
+  - /etc/prometheus/alerts.yml
+
 scrape_configs:
   - job_name: fraud-api
     metrics_path: /metrics
     static_configs:
       - targets: ["api:8000"]
+
+  # Dérive (PSI), taille du dataset, dernier run du pipeline — voir
+  # platform_api/metrics.py. Le PSI est mis en cache tant que le dataset ne
+  # change pas, mais le tout premier calcul relit ~285k lignes : timeout large.
+  - job_name: fraud-platform
+    metrics_path: /metrics
+    scrape_interval: 30s
+    scrape_timeout: 25s
+    static_configs:
+      - targets: ["platform-api:8000"]

@@ -1,0 +1,71 @@
+# Règles d'alerte (visibles dans Prometheus > Alerts, http://exp.s3.fsbm.ma:4604/alerts,
+# et dans le dashboard Grafana "Dérive & pipeline"). Pas d'Alertmanager : hors
+# périmètre de la démo — les règles passent en "firing" et sont consultables ;
+# brancher Alertmanager (mail / Slack) ne demande qu'un bloc `alerting:` dans
+# prometheus.yml.
+groups:
+  - name: fraud-data-drift
+    rules:
+      - alert: FraudDataDriftHigh
+        expr: fraud_drift_max_psi >= fraud_drift_threshold
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Dérive des données : PSI max = {{ $value | printf \"%.3f\" }}, seuil dépassé"
+          description: "Le PSI maximal dépasse le seuil configuré (tableau de bord > Dérive) : ré-entraînement à envisager."
+
+      - alert: FraudDataDriftModerate
+        expr: fraud_drift_max_psi >= 0.10 and fraud_drift_max_psi < fraud_drift_threshold
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Dérive modérée des données (PSI max >= 0.10)"
+          description: "À surveiller : la distribution des nouvelles transactions s'écarte de la référence."
+
+  - name: fraud-pipeline
+    rules:
+      - alert: FraudPipelineLastRunFailed
+        expr: fraud_pipeline_last_run_success == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Le dernier run du pipeline a échoué"
+          description: "Voir l'historique des runs du tableau de bord (ou l'UI Dagster, port 4608)."
+
+      - alert: FraudPipelineStale
+        expr: time() - fraud_pipeline_last_run_timestamp_seconds > 3 * 24 * 3600
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Aucun run du pipeline depuis plus de 3 jours"
+          description: "Le schedule nocturne Dagster (02:00) devrait tourner chaque jour."
+
+  - name: fraud-availability
+    rules:
+      - alert: FraudApiDown
+        expr: up{job="fraud-api"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "L'API de scoring ne répond plus"
+
+      - alert: FraudPlatformDown
+        expr: up{job="fraud-platform"} == 0
+        for: 2m
+        labels:
+          severity: warning
+        annotations:
+          summary: "La plateforme d'opérations ne répond plus (métriques de dérive indisponibles)"
+
+      - alert: FraudDriftUnavailable
+        expr: fraud_drift_available == 0
+        for: 10m
+        labels:
+          severity: warning
+        annotations:
+          summary: "Le PSI ne peut plus être calculé (dataset absent ? `dvc pull` requis)"

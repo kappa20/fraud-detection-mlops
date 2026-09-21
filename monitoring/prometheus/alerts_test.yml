@@ -1,0 +1,57 @@
+# Tests unitaires des règles d'alerte :
+#   docker run --rm --entrypoint promtool -v "$PWD/monitoring/prometheus:/etc/prometheus:ro" \
+#     prom/prometheus:v2.55.1 test rules /etc/prometheus/alerts_test.yml
+rule_files:
+  - alerts.yml
+
+evaluation_interval: 1m
+
+tests:
+  - interval: 1m
+    input_series:
+      # PSI sous le seuil, puis au-dessus à partir de la 5e minute.
+      - series: 'fraud_drift_max_psi{job="fraud-platform"}'
+        values: "0.05 0.05 0.05 0.05 0.40 0.40 0.40 0.40"
+      - series: 'fraud_drift_threshold{job="fraud-platform"}'
+        values: "0.25+0x7"
+    alert_rule_test:
+      - eval_time: 3m
+        alertname: FraudDataDriftHigh
+        exp_alerts: []
+      - eval_time: 7m
+        alertname: FraudDataDriftHigh
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: fraud-platform
+            exp_annotations:
+              summary: "Dérive des données : PSI max = 0.400, seuil dépassé"
+              description: "Le PSI maximal dépasse le seuil configuré (tableau de bord > Dérive) : ré-entraînement à envisager."
+
+  - interval: 1m
+    input_series:
+      - series: 'fraud_pipeline_last_run_success{job="fraud-platform"}'
+        values: "1 1 0 0 0"
+      - series: 'up{job="fraud-api"}'
+        values: "1 1 0 0 0"
+    alert_rule_test:
+      - eval_time: 1m
+        alertname: FraudPipelineLastRunFailed
+        exp_alerts: []
+      - eval_time: 4m
+        alertname: FraudPipelineLastRunFailed
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: fraud-platform
+            exp_annotations:
+              summary: "Le dernier run du pipeline a échoué"
+              description: "Voir l'historique des runs du tableau de bord (ou l'UI Dagster, port 4608)."
+      - eval_time: 4m
+        alertname: FraudApiDown
+        exp_alerts:
+          - exp_labels:
+              severity: critical
+              job: fraud-api
+            exp_annotations:
+              summary: "L'API de scoring ne répond plus"
