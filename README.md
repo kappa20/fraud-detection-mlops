@@ -34,6 +34,7 @@ Détail complet de l'architecture : [`docs/02_architecture.md`](docs/02_architec
 | [`docs/02_architecture.md`](docs/02_architecture.md) | Architecture complète, décisions techniques, limites assumées | 10 |
 | [`docs/03_installation.md`](docs/03_installation.md) | Guide d'installation | 10 |
 | [`docs/04_guide_utilisation.md`](docs/04_guide_utilisation.md) | Guide d'utilisation | 10 |
+| [`docs/06_stack_komodo.md`](docs/06_stack_komodo.md) | Stack Komodo : ports, Dagster (UI, schedule, sensor), alertes de dérive, MLflow serveur, déploiement continu gardé par la CI | — |
 
 ## Structure du dépôt
 
@@ -79,9 +80,10 @@ pip install -r requirements.txt
 # 1. Placer data/raw/creditcard.csv (voir data/README.md)
 # 2. Lancer le pipeline complet via Dagster :
 dagster job execute -f orchestration_dagster/fraud_dagster/job.py -a fraud_pipeline_job
-# ou avec l'UI web :
+# ou avec l'UI web (http://localhost:3000, + démon : schedule nocturne et sensor) :
 dagster dev -f orchestration_dagster/fraud_dagster/job.py
 ```
+Sur Komodo, l'UI Dagster est le service `dagster` (port 4608).
 Étapes exécutées : ingestion `dlt` (CSV → DuckDB) → validation shift-left → `dbt run` (staging + marts) → `dbt test` (27 tests qualité).
 
 ## Entraîner le modèle et le publier dans MLflow
