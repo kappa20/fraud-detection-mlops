@@ -1,0 +1,15 @@
+# Serveur MLflow vivant de la stack : métadonnées dans PostgreSQL (mlflow-db),
+# artefacts (modèles, courbes) dans MinIO (bucket `mlflow`), servis via le
+# proxy d'artefacts de MLflow (--serve-artifacts) — les clients (train.py,
+# register_model.py, platform-api) n'ont donc besoin d'aucun identifiant S3,
+# seulement de MLFLOW_TRACKING_URI=http://mlflow:5000.
+#
+# L'image officielle ghcr.io/mlflow/mlflow n'embarque ni psycopg2 ni boto3.
+# La version est alignée sur requirements.txt (mlflow==2.22.5) : un serveur et
+# un client de versions différentes sont à l'origine des dérives de schéma
+# déjà rencontrées avec l'ancien instantané SQLite (voir docs/03_installation.md).
+FROM python:3.11-slim
+
+RUN pip install --no-cache-dir mlflow==2.22.5 psycopg2-binary==2.9.10 "boto3>=1.34,<2"
+
+EXPOSE 5000

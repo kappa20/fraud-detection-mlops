@@ -26,23 +26,82 @@ services:
     container_name: fraud-prometheus
     volumes:
       - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
       - prometheus_data:/prometheus
     ports:
       - "4604:9090"
     depends_on:
       - api
+      - platform-api
     networks:
       - fraud_net
     restart: unless-stopped
 
-  mlflow:
-    image: ghcr.io/mlflow/mlflow:v2.17.2
-    container_name: fraud-mlflow
-    working_dir: /mlflow
+  # Métadonnées MLflow (runs, Model Registry) : remplace l'ancien instantané
+  # SQLite en lecture seule commité dans git (mlflow_snapshot/).
+  mlflow-db:
+    image: postgres:16-alpine
+    container_name: fraud-mlflow-db
+    environment:
+      - POSTGRES_USER=mlflow
+      - POSTGRES_PASSWORD=${MLFLOW_DB_PASSWORD:-mlflow}
+      - POSTGRES_DB=mlflow
     volumes:
-      - ./mlflow_snapshot/mlflow.db:/mlflow/mlflow.db:ro
-      - ./mlflow_snapshot/mlruns:/mlflow/mlruns:ro
-    command: mlflow server --backend-store-uri sqlite:///mlflow.db --default-artifact-root /mlflow/mlruns --host 0.0.0.0 --port 5000
+      - mlflow_db_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U mlflow -d mlflow"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+    networks:
+      - fraud_net
+    restart: unless-stopped
+
+  # Tâche unique : crée les buckets MinIO (artefacts MLflow + stockage DVC).
+  minio-init:
+    image: quay.io/minio/mc:RELEASE.2025-04-16T18-13-26Z
+    container_name: fraud-minio-init
+    depends_on:
+      minio:
+        condition: service_healthy
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-admin12345}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        mc alias set local http://minio:9000 "$$MINIO_ROOT_USER" "$$MINIO_ROOT_PASSWORD" &&
+        mc mb --ignore-existing local/mlflow &&
+        mc mb --ignore-existing local/dvc-store
+    networks:
+      - fraud_net
+    restart: "no"
+
+  mlflow:
+    build:
+      context: .
+      dockerfile: Dockerfile.mlflow
+    container_name: fraud-mlflow
+    command: >
+      mlflow server
+      --backend-store-uri postgresql://mlflow:${MLFLOW_DB_PASSWORD:-mlflow}@mlflow-db:5432/mlflow
+      --artifacts-destination s3://mlflow
+      --serve-artifacts
+      --host 0.0.0.0 --port 5000
+    environment:
+      - MLFLOW_S3_ENDPOINT_URL=http://minio:9000
+      - AWS_ACCESS_KEY_ID=${MINIO_ROOT_USER:-admin}
+      - AWS_SECRET_ACCESS_KEY=${MINIO_ROOT_PASSWORD:-admin12345}
+    depends_on:
+      mlflow-db:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5000/health')"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
     ports:
       - "4602:5000"
     networks:
@@ -95,6 +154,7 @@ services:
     container_name: fraud-platform-api
     volumes:
       - .:/app
+      - dagster_home:/dagster_home
     environment:
       - PYTHONUNBUFFERED=1
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-admin}
@@ -109,10 +169,46 @@ services:
       - KOMODO_API_KEY=${KOMODO_API_KEY:-}
       - KOMODO_API_SECRET=${KOMODO_API_SECRET:-}
       - KOMODO_STACK=${KOMODO_STACK:-}
+      # Runs, registry et artefacts MLflow sur le serveur vivant (mlflow-db + MinIO).
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+      # Instance Dagster partagée avec le service `dagster` : les runs lancés
+      # depuis le tableau de bord apparaissent dans l'UI Dagster (port 4608).
+      - DAGSTER_HOME=/dagster_home
     ports:
       - "4607:8000"
     depends_on:
       - minio
+      - mlflow
+    networks:
+      - fraud_net
+    restart: unless-stopped
+
+  # UI Dagster + démon (schedule nocturne, sensor sur le dataset). Même image et
+  # même dépôt bind-monté que platform-api : les ops lancent dlt / dbt / train
+  # exactement comme lorsque la plateforme les déclenche.
+  dagster:
+    build:
+      context: .
+      dockerfile: Dockerfile.platform
+    container_name: fraud-dagster
+    entrypoint: ["sh", "/app/docker/dagster-entrypoint.sh"]
+    volumes:
+      - .:/app
+      - dagster_home:/dagster_home
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DAGSTER_HOME=/dagster_home
+      - MLFLOW_TRACKING_URI=http://mlflow:5000
+    ports:
+      - "4608:3000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:3000/server_info')"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    depends_on:
+      - mlflow
     networks:
       - fraud_net
     restart: unless-stopped
@@ -121,6 +217,8 @@ volumes:
   prometheus_data:
   grafana_data:
   minio_data_v2:
+  mlflow_db_data:
+  dagster_home:
 
 networks:
   fraud_net:
