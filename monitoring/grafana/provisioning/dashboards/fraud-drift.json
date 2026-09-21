@@ -189,7 +189,7 @@
       },
       "targets": [
         {
-          "expr": "fraud_pipeline_last_run_success",
+          "expr": "fraud_pipeline_last_run_success or vector(-1)",
           "refId": "A"
         }
       ],
@@ -199,8 +199,12 @@
             "mode": "absolute",
             "steps": [
               {
-                "color": "red",
+                "color": "blue",
                 "value": null
+              },
+              {
+                "color": "red",
+                "value": 0
               },
               {
                 "color": "green",
@@ -212,6 +216,10 @@
             {
               "type": "value",
               "options": {
+                "-1": {
+                  "text": "AUCUN RUN",
+                  "color": "blue"
+                },
                 "0": {
                   "text": "ÉCHEC"
                 },
