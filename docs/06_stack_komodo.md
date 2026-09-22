@@ -58,10 +58,12 @@ d'artefacts (`--serve-artifacts`). `train.py`, `register_model.py` et `platform-
 `MLFLOW_TRACKING_URI=http://mlflow:5000` ; sans cette variable, le mode local SQLite est inchangé
 (tests, développement). Avec un serveur vivant, `publish_mlflow_snapshot()` est ignoré.
 
-**Le registry est neuf.** Les versions v1/v2 de l'ancien snapshot ne sont pas migrées : le premier
-ré-entraînement enregistre une v1 et, comme aucun modèle n'est en Production, la porte de promotion la
-promeut automatiquement (`model.pkl` est alors réécrit). Lancer « Ré-entraîner le modèle maintenant »
-une fois après le déploiement, avant toute démo.
+**Le registry est neuf.** Les versions v1/v2 de l'ancien snapshot ne sont pas migrées. Lancé depuis le tableau de
+bord, le premier ré-entraînement enregistre une v1 **en Staging** : la plateforme tourne avec la promotion automatique
+désactivée (`auto_promote: false`), un humain doit approuver (Pipeline → « Approuver »). Seul un lancement direct de
+`ml/register_model.py` sans `--no-promote` promeut automatiquement le premier candidat quand il n'y a pas de
+Production. À l'approbation, `model.pkl` est réécrit, puis `fraud-api` est redémarré via Komodo (si `KOMODO_*` est défini
+sur `platform-api`) — sinon redémarrer le service `api` à la main.
 
 ## Déploiement continu gardé par la CI
 
