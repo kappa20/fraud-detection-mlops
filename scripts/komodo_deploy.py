@@ -47,12 +47,31 @@ TRANSIENT_MARKERS = (
     "toomanyrequests",
     "502 bad gateway",
     "503 service unavailable",
-    "already a rebase-merge directory",  # Débloque le bug Git sur le serveur Komodo
+)
+
+# Un `.git/rebase-merge` qui traîne (pull interrompu, souvent par un déploiement
+# concurrent — webhook GitHub encore actif en plus du job CI, voir
+# docs/06_stack_komodo.md) ne se résorbe jamais tout seul : rejouer retombe sur
+# la même erreur à chaque essai. Ne PAS le mettre dans TRANSIENT_MARKERS
+# (ça a été tenté en e2e5bcb, ça gaspille juste 3 x 60 s avant d'échouer pareil) ;
+# on échoue tout de suite avec la marche à suivre.
+GIT_REBASE_LOCK_MARKER = "already a rebase-merge directory"
+GIT_REBASE_LOCK_HELP = (
+    "Le `git pull` de Komodo est bloqué par un rebase inachevé sur le serveur. Rejouer ne "
+    "sert à rien : quelqu'un doit nettoyer le checkout côté serveur Komodo "
+    "(`git rebase --abort` ou `rm -rf .git/rebase-merge` dans le répertoire de la stack), "
+    "puis relancer le déploiement. Vérifier aussi qu'aucun webhook GitHub concurrent ne "
+    "redéploie en parallèle du job CI (Settings > Webhooks) — c'est la cause la plus probable "
+    "d'un rebase interrompu. Voir docs/06_stack_komodo.md."
 )
 
 
 class TransientDeployError(RuntimeError):
     """Échec dû à un incident réseau côté serveur : rejouer le déploiement est sans risque."""
+
+
+class GitLockError(RuntimeError):
+    """Checkout Git bloqué par un rebase inachevé côté serveur Komodo : rejouer ne le débloque pas."""
 
 
 def _call(base_url: str, path: str, body: dict, key: str, secret: str, timeout: float = 30.0) -> dict:
@@ -95,7 +114,10 @@ def deploy_stack(env: dict, timeout_s: float = 1200.0, poll_s: float = 10.0) -> 
 
     if not update.get("success"):
         details = _failure_details(update)
-        error = TransientDeployError if any(m in details.lower() for m in TRANSIENT_MARKERS) else RuntimeError
+        lowered = details.lower()
+        if GIT_REBASE_LOCK_MARKER in lowered:
+            raise GitLockError("Le déploiement Komodo a échoué :\n" + details + "\n\n" + GIT_REBASE_LOCK_HELP)
+        error = TransientDeployError if any(m in lowered for m in TRANSIENT_MARKERS) else RuntimeError
         raise error("Le déploiement Komodo a échoué :\n" + details)
     print("Déploiement Komodo terminé avec succès.")
 

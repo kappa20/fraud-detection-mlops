@@ -116,3 +116,27 @@ def test_real_failure_is_not_retried(monkeypatch):
     )
     assert komodo_deploy.main(ENV) == 1
     assert len(calls) == 1
+
+
+def test_git_rebase_lock_fails_immediately_with_actionable_message(monkeypatch, capsys):
+    calls = _fake_api(
+        monkeypatch,
+        [
+            {
+                **TLS_FAILURE,
+                "logs": [
+                    {
+                        "stage": "Git pull",
+                        "success": False,
+                        "stderr": "fatal: It seems that there is already a rebase-merge directory",
+                    }
+                ],
+            },
+            OK,
+        ],
+    )
+    assert komodo_deploy.main(ENV) == 1
+    assert len(calls) == 1  # pas de nouvel essai : rejouer ne débloque pas le rebase
+    out = capsys.readouterr().out
+    assert "git rebase --abort" in out
+    assert "webhook" in out
