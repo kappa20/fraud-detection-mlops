@@ -84,3 +84,19 @@ de santé optionnel.
    identifiants MinIO/Grafana par défaut restent à changer.
 
 Si les secrets sont absents (fork, premier push), le job affiche un avertissement et se termine sans échec.
+
+### Panne connue : `.git/rebase-merge` bloqué sur le serveur
+
+Si le job `deploy` échoue avec `fatal: It seems that there is already a rebase-merge directory` (le
+`git pull` que Komodo lance côté serveur avant le build), **rejouer ne sert à rien** : ce n'est pas un
+incident réseau transitoire, c'est un rebase resté ouvert dans le checkout de la stack sur `vh3` — il ne
+se résorbe pas tout seul, `scripts/komodo_deploy.py` échoue donc immédiatement sur cette erreur au lieu
+de gaspiller 3 tentatives (voir `GitLockError`/`GIT_REBASE_LOCK_MARKER`).
+
+Cause la plus probable : le webhook GitHub (étape 2 ci-dessus) est toujours actif en plus du job CI —
+deux `DeployStack` concurrents tirent sur le même checkout et interrompent le `git pull` de l'un des deux
+en plein rebase. Vérifier d'abord que le webhook a bien été supprimé/désactivé.
+
+Correctif : se connecter au serveur Komodo (ou au conteneur qui a accès au checkout de la stack) et
+lancer `git rebase --abort` — ou, à défaut, supprimer le répertoire `.git/rebase-merge` — dans le
+répertoire de la stack, puis relancer le déploiement.
