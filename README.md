@@ -1,6 +1,6 @@
 # Détection de fraude bancaire — Projet MLOps & DataOps
 
-Projet de groupe du module **MLOps & DataOps** (Pr. Mohammed AIT DAOUD, FSBM, Université Hassan II de Casablanca, 2025/2026).
+
 
 **Sujet :** Détection de fraude bancaire — Classification des transactions frauduleuses (Finance).
 **Réalisé par :** équipe de 9 personnes — voir [`info.txt`](info.txt) pour la répartition des rôles Agile.
