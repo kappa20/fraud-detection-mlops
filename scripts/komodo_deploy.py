@@ -47,6 +47,7 @@ TRANSIENT_MARKERS = (
     "toomanyrequests",
     "502 bad gateway",
     "503 service unavailable",
+    "already a rebase-merge directory",  # Débloque le bug Git sur le serveur Komodo
 )
 
 
