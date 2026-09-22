@@ -3,7 +3,7 @@
 Projet de groupe du module **MLOps & DataOps** (Pr. Mohammed AIT DAOUD, FSBM, Université Hassan II de Casablanca, 2025/2026).
 
 **Sujet :** Détection de fraude bancaire — Classification des transactions frauduleuses (Finance).
-**Réalisé par :** équipe de 9 personnes — voir [`info.txt`](info.txt) pour la répartition des rôles Agile.
+**Réalisé par :** équipe de 8 personnes — voir [`info.txt`](info.txt) pour la répartition des rôles Agile.
 **Encadré par :** Pr. Mohammed AIT DAOUD.
 **Cahier des charges :** cahier des charges du module (fourni séparément).
 **Rapport final (Livrable 7) :** conservé hors dépôt (document de soutenance).

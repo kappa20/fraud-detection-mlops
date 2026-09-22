@@ -31,7 +31,7 @@ Ce backlog découpe les 10 livrables du cahier des charges du module en user sto
 | US-19 | En tant que **Data Analyst**, je veux un rapport simple de dérive des données comparant la distribution récente à celle d'entraînement, afin d'anticiper le besoin de ré-entraînement du modèle. | 9 — Monitoring | S | 3 | 3 |
 | US-20 | En tant que **nouveau contributeur**, je veux un README avec architecture, guide d'installation et guide d'utilisation, afin de pouvoir installer et faire fonctionner le projet sans aide externe. | 10 — Documentation | M | 3 | 3 |
 
-**Total estimé : 71 points sur 3 sprints** (~24 points/sprint en moyenne — cohérent avec une équipe de 9 personnes sur des sprints courts).
+**Total estimé : 71 points sur 3 sprints** (~24 points/sprint en moyenne — cohérent avec une équipe de 8 personnes sur des sprints courts).
 
 **Statut : les 20 user stories (71 points) sont livrées** — voir le détail dans les Sprint Reviews (`sprint_1_review.md`, `sprint_2_review.md`, `sprint_3_review.md`) et la synthèse finale dans le rapport final (conservé hors dépôt).
 

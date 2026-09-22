@@ -1,4 +1,4 @@
-Members: 9 people (names withheld from the public repo — see private team record kept outside this repository)
+Members: 8 people (names withheld from the public repo — see private team record kept outside this repository)
 
 machine learning project path:
 - projet numero 3 : Détection de fraude

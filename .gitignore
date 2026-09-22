@@ -18,6 +18,7 @@ dbt_fraud/.user.yml
 # MLflow
 mlruns/
 mlflow.db
+mlflow.db.bak-*
 ml/artifacts/*.pkl
 ml/artifacts/*.joblib
 ml/artifacts/latest_training_run.json
@@ -54,3 +55,6 @@ venv/
 .DS_Store
 .vscode/
 .idea/
+
+creds.txt
+collaborators.txt
